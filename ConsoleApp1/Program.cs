@@ -3,15 +3,18 @@
     private static void Main()
     {
         int p = 2;
-        int z = 4;
+        int z = 8;
 
         switch (p)
         {
             case 1:
-                new Pr1(z);
+                _ = new Pr1(z);
                 break;
             case 2:
-                new Pr2(z);
+                if (z != 8)
+                    _ = new Pr2(z);
+                else 
+                    _ = new Pr2_2();
                 break;
         }      
     }

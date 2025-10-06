@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Reflection;
 
 class Pr2
 {
@@ -22,6 +23,12 @@ class Pr2
                 break;
             case 5:
                 Pr2.Z5();
+                break;
+            case 6:
+                Pr2.Z6();
+                break;
+            case 7:
+                Pr2.Z7();
                 break;
         }
     }
@@ -62,7 +69,7 @@ class Pr2
         }
     }
 
-    public static double Z1(double x, int n)
+    private static double Z1(double x, int n)
     {
         if (n == 0)
             return x;
@@ -70,7 +77,7 @@ class Pr2
         return Z1(x, n - 1) + term;
     }
 
-    public static void Z2()
+    private static void Z2()
     {
         Console.WriteLine("Введите номер билета: ");
         int n = Convert.ToInt32(Console.ReadLine());
@@ -79,7 +86,7 @@ class Pr2
         Console.WriteLine(c1 == c2);
     }
 
-    public static void Z3()
+    private static void Z3()
     {
         Console.WriteLine("Введите числитель: ");
         int n1 = Convert.ToInt32(Console.ReadLine());
@@ -101,35 +108,33 @@ class Pr2
             int gcd = GCD(n1, n2);
             n1 /= gcd;
             n2 /= gcd;
-            Console.WriteLine("Результат: " + (negative ? "-(" : "(") + Convert.ToString(n1) + " / " + Convert.ToString(n2) + ")" + (n1 == n2 ? (" --> " + Convert.ToString(n1)) : ""));
+            Console.WriteLine($"Результат: {(negative ? "-(" : "(")}{n1}/{n2}) {(n2 == 1 ? ("--> " + n1) :"")}");
         }
     }
 
-    public static void Z4()
+    private static void Z4()
     {
         int n = 32;
         int n2 = 16;
         while (n2 != 0)
         {
-            Console.WriteLine("»Ваше число: " + Convert.ToString(n) + "? («да-3» «больше-2» «меньше-1)");
+            Console.WriteLine($"»Ваше число: {n}? («да-3» «больше-2» «меньше-1)");
             int a = Convert.ToInt16(Console.ReadLine());
             if (a == 3) break;
             if (a == 2) n += n2;
             else n -= n2;
             n2 /= 2;
         }
-        Console.WriteLine("Ваше число: " + Convert.ToString(n));
+        Console.WriteLine($"Ваше число: {n}");
     }
 
-
-
-    public static void Z5()
+    private static void Z5()
     {
         List<string> componentsN = new(["вода", "молоко"]);
         List<int> componentsM = [];
         for (int i = 0; i < componentsN.Count; i++)
         {
-            Console.WriteLine("Введите количество " + componentsN[i] + " в мл:");
+            Console.WriteLine($"Введите количество {componentsN[i]} в мл:");
             int r = Convert.ToInt32(Console.ReadLine());
             if (r < 0)
             {
@@ -148,7 +153,7 @@ class Pr2
             Console.Write("\nВыберите напиток ");
             for (int i = 0; i < VarietyDrinks.Count; i++)
             {
-                Console.Write(Convert.ToString(i + 1) + " - " + VarietyDrinks[i].name + ", ");
+                Console.Write($"{i+1} - {VarietyDrinks[i].name}, ");
             }
             Console.Write("\n");
             int selectedItem = Convert.ToInt32(Console.ReadLine()) - 1;
@@ -162,7 +167,7 @@ class Pr2
             if (!d.Chek(componentsM))
             {
                 for (int i = 0; i < d.components.Count; i++)
-                    if (componentsM[i] < d.components[i]) Console.WriteLine("Не хватает: " + componentsN[i]);
+                    if (componentsM[i] < d.components[i]) Console.WriteLine($"Не хватает: {componentsN[i]}");
                 continue;
             }
             for (int i = 0; i < d.components.Count; i++)
@@ -177,15 +182,65 @@ class Pr2
         Console.WriteLine("Ингредиентов осталось: ");
         for (int i = 0; i < componentsM.Count; i++)
         {
-            Console.WriteLine(Convert.ToString(componentsN[i]) + ": " + Convert.ToString(componentsM[i]) + "мл");
+            Console.WriteLine($"{componentsN[i]}: {componentsM[i]}мл");
         }
         Console.Write("\n");
         for (int i = 0; i < VarietyDrinks.Count; i++)
         {
-            Console.Write("Приготовлено кружек " + VarietyDrinks[i].name + ": " + Convert.ToString(VarietyDrinks[i].ReturnNP()));
-            Console.Write(", что принесло: " + Convert.ToString(VarietyDrinks[i].ReturnProfit()) + "р\n");
+            Console.Write($"Приготовлено кружек {VarietyDrinks[i].name}: {VarietyDrinks[i].ReturnNP()}");
+            Console.Write($", что принесло: {VarietyDrinks[i].ReturnProfit()}р\n");
         }
         Console.Write("\n");
-        Console.WriteLine("Суммарный доход: " + Convert.ToString(VarietyDrinks.Sum(i => i.ReturnProfit())) + "р");
+        Console.WriteLine($"Суммарный доход: {VarietyDrinks.Sum(i => i.ReturnProfit())}р");
+    }
+
+    private static void Z6()
+    {
+        Console.WriteLine("Введите количество бактерий:");
+        Int64 n = Convert.ToInt64(Console.ReadLine());
+        Console.WriteLine("Введите количество антибиотика:");
+        Int64 x = Convert.ToInt64(Console.ReadLine());
+        Int64 time = 0;
+        while ((n > 0 && x > 0) || time < 5)
+        {
+            time++;
+            n *= 2;
+            n -= x;
+            if (n < 0) n = 0;
+            x--;
+            Console.WriteLine($"После {time} часа бактерий осталось {n}");     
+        }
+    }
+
+    private static void Z7()
+    {
+        Console.WriteLine("Введите n:");
+        int n = Convert.ToInt32(Console.ReadLine());
+        Console.WriteLine("Введите a:");
+        int a = Convert.ToInt32(Console.ReadLine());
+        Console.WriteLine("Введите b:");
+        int b = Convert.ToInt32(Console.ReadLine());
+        Console.WriteLine("Введите w:");
+        int w = Convert.ToInt32(Console.ReadLine());
+        Console.WriteLine("Введите h:");
+        int h = Convert.ToInt32(Console.ReadLine());
+
+        int l = 0;
+        int r = Math.Min(w, h) / 2;
+        int d = 0;
+        while (l <= r)
+        {
+            int m = (l + r) / 2;
+            if ((w / (a + 2 * m)) * (h / (b + 2 * m)) >= n)
+            {
+                d = m;
+                l = m + 1;
+            }
+            else
+            {
+                r = m - 1;
+            }
+        }
+        Console.WriteLine($"Ответ d: {d}");
     }
 }
