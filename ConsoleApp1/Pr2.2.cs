@@ -83,6 +83,7 @@ class Pr2_2
             return new Matrix(result);
         }
         public static Matrix operator -(Matrix a, Matrix b) => a + (b * -1);
+        public static Matrix operator |(Matrix a, Matrix b) => Augment(a, b);
         public static Matrix operator /(Matrix a, double b) => a * (1 / b);
         public static Matrix operator *(Matrix a, double b)
         {
@@ -97,8 +98,7 @@ class Pr2_2
                 result.Add(l);
             }
             return new Matrix(result);
-        }
-        public static Matrix operator |(Matrix a, Matrix b) => Augment(a, b);
+        }      
 
         public Matrix GetTranspose()
         {
@@ -157,7 +157,7 @@ class Pr2_2
                 {
 
                     List<List<double>> minor = GetMinor(m, 0, i);
-                    result += ((i % 2 == 0) ? 1 : -1) * m[0][i] * GetDet(minor);
+                    result += Math.Pow(-1, i) * m[0][i] * GetDet(minor);
                 }
                 return result;
             }
@@ -182,40 +182,38 @@ class Pr2_2
         {
             var result = new Matrix(data);
             int lead = 0;
-            int rowCount = SizeI();
-            int columnCount = SizeJ();
+            int rCount = SizeI();
+            int cCount = SizeJ();
 
-            for (int r = 0; r < rowCount; r++)
+            for (int r = 0; r < rCount; r++)
             {
-                if (lead >= columnCount) break;
+                if (lead >= cCount) break;
 
                 int i = r;
                 while (Math.Abs(result[i, lead]) < 1e-10)
                 {
                     i++;
-                    if (i == rowCount)
+                    if (i == rCount)
                     {
                         i = r;
                         lead++;
-                        if (lead == columnCount) return result;
+                        if (lead == cCount) return result;
                     }
                 }
-                for (int j = 0; j < columnCount; j++)
+                for (int j = 0; j < cCount; j++)
                 {
-                    double temp = result[i, j];
-                    result[i, j] = result[r, j];
-                    result[r, j] = temp;
+                    (result[r, j], result[i, j]) = (result[i, j], result[r, j]);
                 }
                 double div = result[r, lead];
                 if (Math.Abs(div) > 1e-10)
-                    for (int j = 0; j < columnCount; j++)
+                    for (int j = 0; j < cCount; j++)
                         result[r, j] /= div;
-                for (int j = 0; j < rowCount; j++)
+                for (int j = 0; j < rCount; j++)
                 {
                     if (j != r)
                     {
                         double mult = result[j, lead];
-                        for (int k = 0; k < columnCount; k++)
+                        for (int k = 0; k < cCount; k++)
                             result[j, k] -= mult * result[r, k];
                     }
                 }
@@ -233,7 +231,7 @@ class Pr2_2
             return rank;
         }
 
-        public Matrix Clean(double tolerance = 1e-10)
+        public Matrix Clean(double tolerance = 1e-12)
         {
             List<List<double>> cleaned = [];
             for (int i = 0; i < SizeI(); i++)
@@ -344,7 +342,7 @@ class Pr2_2
             for (int i = 0; i < SizeI(); i++)
             {
                 Console.Write($"Строка {i + 1}: ");
-                string[] values = Console.ReadLine().Split(' ');
+                string[] values = Console.ReadLine()!.Split(' ');
 
                 for (int j = 0; j < SizeJ(); j++)
                 {
@@ -430,6 +428,7 @@ class Pr2_2
             [5]
             ]);
         Matrix o6 = Matrix.Solve(m1, m3);
+        Matrix o7 = m1 * o6;
         double det = m1.GetDet();
 
         Console.Write(
@@ -442,7 +441,7 @@ class Pr2_2
             $"проверка обратной матрицы m1:\n{o5.Round(true)}\n" +
             $"матрица m3:\n{m3}\n" +
             $"решения СЛАУ[m1|m3]:\n{o6.Round(true)}\n" +
-            $"проверка решения СЛАУ(m1*решение):\n{(m1*o6).Round(true)}\n" +
+            $"проверка решения СЛАУ(m1*решение):\n{o7.Round(true)}\n" +
             $"Определитель m1:\n{det}\n"
             );
     }
