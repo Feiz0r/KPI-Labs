@@ -9,8 +9,7 @@ class Pr2
         switch (i)
         {
             case 1:
-                double term = Pr2.Z1(Math.PI / 6, 15);
-                Console.WriteLine(term);
+                Pr2.Z1();
                 break;
             case 2:
                 Pr2.Z2();
@@ -35,9 +34,12 @@ class Pr2
 
     static double Factorial(int n) //1
     {
-        if (n <= 1)
-            return 1;
-        return n * Factorial(n - 1);
+        double result = 1;
+        for (int i = 2; i <= n; i++)
+        {
+            result *= i;
+        }
+        return result;
     }
 
     static int GCD(int a, int b) //3
@@ -69,12 +71,31 @@ class Pr2
         }
     }
 
-    private static double Z1(double x, int n)
+    private static void Z1()
     {
-        if (n == 0)
-            return x;
+        Console.WriteLine("Введите x (в градусах): ");
+        double x = Convert.ToDouble(Console.ReadLine());
+        Console.WriteLine("Введите n: ");
+        int n = Convert.ToInt32(Console.ReadLine());
+
+        x = x * Math.PI / 180;
         double term = Math.Pow(-1, n) * Math.Pow(x, 2 * n + 1) / Factorial(2 * n + 1);
-        return Z1(x, n - 1) + term;
+        Console.WriteLine($"f({x}, {n}): {Math.Round(term, 8)}");
+
+        Console.WriteLine("Введите точность e: ");
+        double e = Convert.ToDouble(Console.ReadLine());
+
+        double sum = 0;
+        double f;
+        int k = 0;
+        do
+        {
+            f = Math.Pow(-1, k) * Math.Pow(x, 2 * k + 1) / Factorial(2 * k + 1);
+            sum += f;
+            k++;
+        } while (Math.Abs(f) >= e);
+
+        Console.WriteLine($"Сумма: {Math.Round(sum,8)}, Членов ряда: {k}");
     }
 
     private static void Z2()
@@ -83,7 +104,7 @@ class Pr2
         int n = Convert.ToInt32(Console.ReadLine());
         int c1 = (n % 10) + (n % 100) / 10 + (n % 1000) / 100;
         int c2 = (n % 10000) / 1000 + (n % 100000) / 10000 + (n % 1000000) / 100000;
-        Console.WriteLine(c1 == c2);
+        Console.WriteLine($"Вы счастливы? {c1 == c2}");
     }
 
     private static void Z3()

@@ -337,7 +337,7 @@ class Pr2_2
         }
         public void FillFromConsole()
         {
-            Console.WriteLine($"Заполнение матрицы [{data.Count}:{data[0].Count}]:");
+            Console.WriteLine($"Заполнение матрицы [{this.SizeI()}:{this.SizeJ()}]:");
             Console.WriteLine("Введите строки матрицы через пробел, разделяя строки Enter:");
             for (int i = 0; i < SizeI(); i++)
             {
@@ -402,11 +402,11 @@ class Pr2_2
 
     public Pr2_2()
     {
-        Matrix m1 = new(5, 5);
+        Matrix m1 = new(6, 6);
         //m1.FillFromConsole();
         m1.FillRandom(1, 5);
 
-        Matrix m2 = new(5, 5);
+        Matrix m2 = new(6, 6);
 
         //Console.WriteLine("Введите минимальное значение (a): ");
         //int a = Convert.ToInt32(Console.ReadLine());
@@ -425,11 +425,13 @@ class Pr2_2
             [2],
             [3],
             [4],
-            [5]
+            [5],
+            [6]
             ]);
         Matrix o6 = Matrix.Solve(m1, m3);
         Matrix o7 = m1 * o6;
         double det = m1.GetDet();
+        Matrix o8 = (m1|m3).GetRREF();
 
         Console.Write(
             $"матрица m1:\n{m1}\n" +
@@ -440,9 +442,10 @@ class Pr2_2
             $"матрица обратная m1:\n{o4.Round(true)}\n" +
             $"проверка обратной матрицы m1:\n{o5.Round(true)}\n" +
             $"матрица m3:\n{m3}\n" +
-            $"решения СЛАУ[m1|m3]:\n{o6.Round(true)}\n" +
-            $"проверка решения СЛАУ(m1*решение):\n{o7.Round(true)}\n" +
-            $"Определитель m1:\n{det}\n"
+            $"решения СЛАУ[m1|m3] через обратную матрицу:\n{o6.Round(true)}\n" +
+            $"проверка решения СЛАУ(m1*решение):\n{o7.Round(true)}\n" +         
+            $"решения СЛАУ[m1|m3] через метод Гаусса:\n{o8.Round(true)}\n"+
+            $"Определитель m1:\n{det}\n" 
             );
     }
 }
