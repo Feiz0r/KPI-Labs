@@ -6,6 +6,9 @@ class Pr2_2
     {
         private readonly List<List<double>> data = [];
 
+        public int SizeI() => data.Count;
+        public int SizeJ() => data[0].Count;
+
         public Matrix(int h, int m)
         {
             bool error = (h <= 0 || m <= 0);
@@ -22,8 +25,15 @@ class Pr2_2
             }
         }
 
-        private Matrix(List<List<double>> inputList)
+        public Matrix(List<List<double>> inputList)
         {
+            bool error = inputList.Count <= 0 || inputList[0].Count <= 0;
+            for (int i = 0; i < inputList.Count; i++)
+                error = error || (inputList[0].Count != inputList[i].Count);
+            if (error)
+                throw new Exception("Нарушение размерности матрицы");
+
+
             foreach (var r in inputList)
             {
                 data.Add(new List<double>(r));
@@ -32,15 +42,15 @@ class Pr2_2
 
         public static Matrix operator +(Matrix a, Matrix b)
         {
-            bool error = (a.data.Count != b.data.Count) || (a.data[0].Count != b.data[0].Count);
+            bool error = (a.SizeI() != b.SizeI()) || (a.SizeJ() != b.SizeJ());
             if (error)
                 throw new Exception("Сложение невозможно - размерность несовпадает");
 
             List<List<double>> result = [];
-            for (int i = 0; i < a.data.Count; i++)
+            for (int i = 0; i < a.SizeI(); i++)
             {
                 List<double> l = [];
-                for (int j = 0; j < a.data[0].Count; j++)
+                for (int j = 0; j < a.SizeJ(); j++)
                 {
                     l.Add(a.data[i][j] + b.data[i][j]);
                 }
@@ -51,19 +61,19 @@ class Pr2_2
 
         public static Matrix operator *(Matrix a, Matrix b)
         {
-            bool error = a.data.Count != b.data[0].Count;
+            bool error = a.SizeJ() != b.SizeI();
             if (error)
                 throw new Exception("Умножение невозможно - матрицы несогласованны");
 
 
             List<List<double>> result = [];
-            for (int i = 0; i < a.data.Count; i++)
+            for (int i = 0; i < a.SizeI(); i++)
             {
                 List<double> l = [];
-                for (int j = 0; j < b.data[0].Count; j++)
+                for (int j = 0; j < b.SizeJ(); j++)
                 {
                     double c = 0;
-                    for (int k = 0; k < a.data[i].Count; k++)
+                    for (int k = 0; k < a.SizeJ(); k++)
                     {
                         c += a.data[i][k] * b.data[k][j];
                     }
@@ -78,10 +88,10 @@ class Pr2_2
         public static Matrix operator *(Matrix a, double b)
         {
             List<List<double>> result = [];
-            for (int i = 0; i < a.data.Count; i++)
+            for (int i = 0; i < a.SizeI(); i++)
             {
                 List<double> l = [];
-                for (int j = 0; j < a.data[0].Count; j++)
+                for (int j = 0; j < a.SizeJ(); j++)
                 {
                     l.Add(a.data[i][j] * b);
                 }
@@ -90,16 +100,13 @@ class Pr2_2
             return new Matrix(result);
         }
 
-        public int SizeI() => data.Count;
-        public int SizeJ() => data[0].Count;
-
         public Matrix Clean(double tolerance = 1e-10)
         {
             List<List<double>> cleaned = [];
-            for (int i = 0; i < data.Count; i++)
+            for (int i = 0; i < SizeI(); i++)
             {
                 List<double> row = [];
-                for (int j = 0; j < data[0].Count; j++)
+                for (int j = 0; j < SizeJ(); j++)
                 {
                     double value = data[i][j];
                     if (Math.Abs(value) < tolerance)
@@ -115,10 +122,10 @@ class Pr2_2
         public Matrix Round(bool clean = false, int decimals = 12)
         {
             List<List<double>> rounded = [];
-            for (int i = 0; i < data.Count; i++)
+            for (int i = 0; i < SizeI(); i++)
             {
                 List<double> row = [];
-                for (int j = 0; j < data[0].Count; j++)
+                for (int j = 0; j < SizeJ(); j++)
                 {
                     row.Add(Math.Round(data[i][j], decimals));
                 }
@@ -134,11 +141,11 @@ class Pr2_2
         public Matrix GetMinor(int row, int col)
         {
             List<List<double>> minor = [];
-            for (int i = 0; i < data.Count; i++)
+            for (int i = 0; i < SizeI(); i++)
             {
                 if (i == row) continue;
                 List<double> newRow = [];
-                for (int j = 0; j < data[i].Count; j++)
+                for (int j = 0; j < SizeJ(); j++)
                 {
                     if (j == col) continue;
                     newRow.Add(data[i][j]);
@@ -171,7 +178,7 @@ class Pr2_2
             {
                 m = data;
                 if (m.Count != m[0].Count)
-                    throw new Exception("Определитель невозможно вычеслить");
+                    throw new Exception("Определитель невозможно вычислить");
             }
             if (m.Count == 1)
                 return m[0][0];
@@ -191,10 +198,10 @@ class Pr2_2
         public Matrix GetTranspose()
         {
             List<List<double>> t = [];
-            for (int i = 0; i < data.Count; i++)
+            for (int i = 0; i < SizeI(); i++)
             {
                 List<double> row = [];
-                for (int j = 0; j < data[0].Count; j++)
+                for (int j = 0; j < SizeJ(); j++)
                 {
                     row.Add(data[j][i]);
                 }
@@ -205,18 +212,18 @@ class Pr2_2
 
         public Matrix GetInverse()
         {
-            if (data.Count != data[0].Count)
+            if (SizeI() != SizeJ())
                 throw new Exception("Обратную матрицу невозможно вычислить - неквадратная матрица");
 
-            double determinant = GetDet();
-            if (Math.Abs(determinant) < 1e-10)
+            double det = GetDet();
+            if (Math.Abs(det) < 1e-10)
                 throw new Exception("Обратную матрицу невозможно вычислить - вырожденная матрица");
 
             List<List<double>> result = [];
-            for (int i = 0; i < data.Count; i++)
+            for (int i = 0; i < SizeI(); i++)
             {
                 List<double> row = [];
-                for (int j = 0; j < data[0].Count; j++)
+                for (int j = 0; j < SizeJ(); j++)
                 {
                     double minorDet = GetMinor(i, j).GetDet();
                     double cofactor = Math.Pow(-1, i + j) * minorDet;
@@ -225,12 +232,12 @@ class Pr2_2
                 result.Add(row);
             }
 
-            Matrix cofactorMatrix = new(result);
-            Matrix adjugateMatrix = cofactorMatrix.GetTranspose();
-            return (adjugateMatrix * (1/determinant));
+            Matrix cMatrix = new(result);
+            Matrix aMatrix = cMatrix.GetTranspose();
+            return (aMatrix * (1/det));
         }
 
-        public Matrix Solve(Matrix a, Matrix b)
+        public static Matrix Solve(Matrix a, Matrix b)
         {
             if (a.GetDet() == 0)
                 throw new Exception("Решить СЛАУ невозможно - вырожденная матрица");
@@ -256,12 +263,12 @@ class Pr2_2
         {
             Console.WriteLine($"Заполнение матрицы [{data.Count}:{data[0].Count}]:");
             Console.WriteLine("Введите строки матрицы через пробел, разделяя строки Enter:");
-            for (int i = 0; i < data.Count; i++)
+            for (int i = 0; i < SizeI(); i++)
             {
                 Console.Write($"Строка {i + 1}: ");
                 string[] values = Console.ReadLine().Split(' ');
 
-                for (int j = 0; j < data[i].Count; j++)
+                for (int j = 0; j < SizeJ(); j++)
                 {
                     data[i][j] = int.Parse(values[j]);
                 }
@@ -272,9 +279,9 @@ class Pr2_2
         public void FillRandom(int a, int b)
         {
             Random random = new();
-            for (int i = 0; i < data.Count; i++)
+            for (int i = 0; i < SizeI(); i++)
             {
-                for (int j = 0; j < data[i].Count; j++)
+                for (int j = 0; j < SizeJ(); j++)
                 {
                     data[i][j] = random.Next(a, b + 1);
                 }
@@ -311,8 +318,18 @@ class Pr2_2
         Matrix o5 = m1 * o4;
         o5.Round(true).Print(" проверки обратной матрицы m1");
 
+        Matrix m3 = new([
+            [1],
+            [2],
+            [3],
+            [4],
+            [5]
+            ]);
+        Matrix o6 = Matrix.Solve(m1, m3);
+        o6.Round(true).Print(" решения СЛАУ");
+
         double det = m1.GetDet();
-        Console.WriteLine($"Определитель: {det}");
+        Console.WriteLine($"\nОпределитель: {det}");
     }
 }
 
