@@ -15,7 +15,7 @@ class Pr1
         }
     }
 
-    public static void Z1()
+    private static void Z1()
     {
         Console.WriteLine("Введите номер дня недели, с которого начинается месяц (1-пн,...7-вс)");
         int a = Convert.ToInt16(Console.ReadLine());
@@ -28,7 +28,7 @@ class Pr1
         Console.WriteLine("Это будет: " + weekDay[c]);
     }
 
-    public static void Z2()
+    private static void Z2()
     {
         int[] banknote = [5000, 2000, 1000, 500, 200, 100];
         int[] banknoteCount = new int[banknote.Length];
