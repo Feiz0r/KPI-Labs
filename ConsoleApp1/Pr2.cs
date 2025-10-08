@@ -58,7 +58,7 @@ class Pr2
         public readonly string name = name;
         public readonly int price = price;
         private int np = 0;
-        public readonly List<int> components = components; //0-water,1-milk,3-...
+        public readonly List<int> components = components; //0-water,1-milk,2-...
 
         public void Use() => np++;
         public int ReturnNP() => (int)(np);
@@ -80,7 +80,7 @@ class Pr2
 
         x = x * Math.PI / 180;
         double term = Math.Pow(-1, n) * Math.Pow(x, 2 * n + 1) / Factorial(2 * n + 1);
-        Console.WriteLine($"f({x}, {n}): {Math.Round(term, 8)}");
+        Console.WriteLine($"f({x}, {n}): {Math.Round(term, 12)}");
 
         Console.WriteLine("Введите точность e: ");
         double e = Convert.ToDouble(Console.ReadLine());
@@ -95,7 +95,7 @@ class Pr2
             k++;
         } while (Math.Abs(f) >= e);
 
-        Console.WriteLine($"Сумма: {Math.Round(sum,8)}, Членов ряда: {k}");
+        Console.WriteLine($"Сумма: {Math.Round(sum,12)}, Членов ряда: {k}");
     }
 
     private static void Z2()

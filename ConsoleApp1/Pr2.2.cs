@@ -331,7 +331,7 @@ class Pr2_2
             var sb = new StringBuilder();
             foreach (var row in data)
             {
-                sb.AppendLine(string.Join(" ", row));
+                sb.AppendLine(string.Join("\t", row));
             }
             return sb.ToString();
         }
@@ -402,36 +402,32 @@ class Pr2_2
 
     public Pr2_2()
     {
-        Matrix m1 = new(6, 6);
+        Matrix m1 = new(3, 3);
         //m1.FillFromConsole();
         m1.FillRandom(1, 5);
 
-        Matrix m2 = new(6, 6);
+        Matrix m2 = new(3, 3);
 
         //Console.WriteLine("Введите минимальное значение (a): ");
         //int a = Convert.ToInt32(Console.ReadLine());
         //Console.WriteLine("Введите максимальное значение (b): ");
         //int b = Convert.ToInt32(Console.ReadLine());
-        //m2.FillRandom(a,b);
+        //m2.FillRandom(a, b);
         m2.FillRandom(1, 5);
+
+        Matrix m3 = new(3, 1);
+        m3.FillRandom(3, 9);
 
         Matrix o1 = m1 + m2;
         Matrix o2 = m1 * m2;
         Matrix o3 = m1.GetTranspose();
         Matrix o4 = m1.GetInverse();
         Matrix o5 = m1 * o4;
-        Matrix m3 = new([
-            [1],
-            [2],
-            [3],
-            [4],
-            [5],
-            [6]
-            ]);
         Matrix o6 = Matrix.Solve(m1, m3);
         Matrix o7 = m1 * o6;
         double det = m1.GetDet();
         Matrix o8 = (m1|m3).GetRREF();
+        Matrix o9 = (m1|Matrix.Identity(m1.SizeI())).GetRREF();
 
         Console.Write(
             $"матрица m1:\n{m1}\n" +
@@ -439,8 +435,9 @@ class Pr2_2
             $"m1 + m2:\n{o1}\n" +
             $"m1 * m2:\n{o2}\n" +
             $"матрица m1 транспонирования:\n{o3}\n" +
-            $"матрица обратная m1:\n{o4.Round(true)}\n" +
+            $"матрица обратная m1 метод алгебраических дополнений:\n{o4.Round(true)}\n" +
             $"проверка обратной матрицы m1:\n{o5.Round(true)}\n" +
+            $"матрица обратная m1 метод Жордана—Гаусса:\n{o9.Round(true)}\n" +
             $"матрица m3:\n{m3}\n" +
             $"решения СЛАУ[m1|m3] через обратную матрицу:\n{o6.Round(true)}\n" +
             $"проверка решения СЛАУ(m1*решение):\n{o7.Round(true)}\n" +         
