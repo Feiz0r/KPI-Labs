@@ -13,9 +13,9 @@
             case 2:
                 if (z != 8)
                     _ = new Pr2(z);
-                else 
+                else
                     _ = new Pr2_2();
                 break;
-        }      
+        }
     }
 }

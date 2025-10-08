@@ -1,6 +1,4 @@
-﻿using System;
-
-class Pr1
+﻿class Pr1
 {
     public Pr1(int i)
     {

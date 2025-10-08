@@ -1,7 +1,4 @@
-﻿using System;
-using System.Reflection;
-
-class Pr2
+﻿class Pr2
 {
 
     public Pr2(int i)
@@ -95,7 +92,7 @@ class Pr2
             k++;
         } while (Math.Abs(f) >= e);
 
-        Console.WriteLine($"Сумма: {Math.Round(sum,12)}, Членов ряда: {k}");
+        Console.WriteLine($"Сумма: {Math.Round(sum, 12)}, Членов ряда: {k}");
     }
 
     private static void Z2()
@@ -129,7 +126,7 @@ class Pr2
             int gcd = GCD(n1, n2);
             n1 /= gcd;
             n2 /= gcd;
-            Console.WriteLine($"Результат: {(negative ? "-(" : "(")}{n1}/{n2}) {(n2 == 1 ? ("--> " + n1) :"")}");
+            Console.WriteLine($"Результат: {(negative ? "-(" : "(")}{n1}/{n2}) {(n2 == 1 ? ("--> " + n1) : "")}");
         }
     }
 
@@ -174,7 +171,7 @@ class Pr2
             Console.Write("\nВыберите напиток ");
             for (int i = 0; i < VarietyDrinks.Count; i++)
             {
-                Console.Write($"{i+1} - {VarietyDrinks[i].name}, ");
+                Console.Write($"{i + 1} - {VarietyDrinks[i].name}, ");
             }
             Console.Write("\n");
             int selectedItem = Convert.ToInt32(Console.ReadLine()) - 1;
@@ -229,7 +226,7 @@ class Pr2
             n -= x;
             if (n < 0) n = 0;
             x--;
-            Console.WriteLine($"После {time} часа бактерий осталось {n}");     
+            Console.WriteLine($"После {time} часа бактерий осталось {n}");
         }
     }
 
