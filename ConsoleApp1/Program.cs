@@ -3,7 +3,7 @@
     private static void Main()
     {
         int p = 2;
-        int z = 8;
+        int z = 2;
 
         switch (p)
         {
