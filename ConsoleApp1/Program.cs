@@ -3,7 +3,7 @@
     private static void Main()
     {
         int p = 2;
-        int z = 8;
+        int z = 2;
 
         switch (p)
         {
@@ -13,9 +13,9 @@
             case 2:
                 if (z != 8)
                     _ = new Pr2(z);
-                else 
+                else
                     _ = new Pr2_2();
                 break;
-        }      
+        }
     }
 }

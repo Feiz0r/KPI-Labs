@@ -1,7 +1,4 @@
-﻿using System;
-using System.Reflection;
-
-class Pr2
+﻿class Pr2
 {
 
     public Pr2(int i)
@@ -80,7 +77,7 @@ class Pr2
 
         x = x * Math.PI / 180;
         double term = Math.Pow(-1, n) * Math.Pow(x, 2 * n + 1) / Factorial(2 * n + 1);
-        Console.WriteLine($"f({x}, {n}): {Math.Round(term, 12)}");
+        Console.WriteLine($"f({x}, {n}): {term}");
 
         Console.WriteLine("Введите точность e: ");
         double e = Convert.ToDouble(Console.ReadLine());
@@ -95,16 +92,23 @@ class Pr2
             k++;
         } while (Math.Abs(f) >= e);
 
-        Console.WriteLine($"Сумма: {Math.Round(sum,12)}, Членов ряда: {k}");
+        Console.WriteLine($"Сумма: {Math.Round(sum, 12)}, Членов ряда: {k}");
     }
 
     private static void Z2()
     {
         Console.WriteLine("Введите номер билета: ");
         int n = Convert.ToInt32(Console.ReadLine());
-        int c1 = (n % 10) + (n % 100) / 10 + (n % 1000) / 100;
-        int c2 = (n % 10000) / 1000 + (n % 100000) / 10000 + (n % 1000000) / 100000;
-        Console.WriteLine($"Вы счастливы? {c1 == c2}");
+        int c1 = 0;
+        int e = 10;
+        for (int i = 0; i < 6; i++, e*=10)
+        {
+            if (i < 3)
+                c1 += (n % e) / (e / 10);
+            else
+                c1 -= (n % e) / (e / 10);
+        }
+        Console.WriteLine($"Вы счастливы? {c1==0}");
     }
 
     private static void Z3()
@@ -129,7 +133,7 @@ class Pr2
             int gcd = GCD(n1, n2);
             n1 /= gcd;
             n2 /= gcd;
-            Console.WriteLine($"Результат: {(negative ? "-(" : "(")}{n1}/{n2}) {(n2 == 1 ? ("--> " + n1) :"")}");
+            Console.WriteLine($"Результат: {(negative ? "-(" : "(")}{n1}/{n2}) {(n2 == 1 ? ("--> " + n1) : "")}");
         }
     }
 
@@ -174,7 +178,7 @@ class Pr2
             Console.Write("\nВыберите напиток ");
             for (int i = 0; i < VarietyDrinks.Count; i++)
             {
-                Console.Write($"{i+1} - {VarietyDrinks[i].name}, ");
+                Console.Write($"{i + 1} - {VarietyDrinks[i].name}, ");
             }
             Console.Write("\n");
             int selectedItem = Convert.ToInt32(Console.ReadLine()) - 1;
@@ -221,15 +225,16 @@ class Pr2
         Int64 n = Convert.ToInt64(Console.ReadLine());
         Console.WriteLine("Введите количество антибиотика:");
         Int64 x = Convert.ToInt64(Console.ReadLine());
-        Int64 time = 0;
-        while ((n > 0 && x > 0) || time < 5)
+        int be = 10;
+        Int64 time = 0;   
+        while ((be > 0 && n > 0))
         {
             time++;
             n *= 2;
-            n -= x;
+            n -= x*be;
             if (n < 0) n = 0;
-            x--;
-            Console.WriteLine($"После {time} часа бактерий осталось {n}");     
+            be--;
+            Console.WriteLine($"После {time} часа бактерий осталось {n}");
         }
     }
 

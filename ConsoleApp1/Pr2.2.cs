@@ -1,12 +1,10 @@
-﻿using System.Collections;
-using System.Numerics;
-using System.Text;
+﻿using System.Text;
 
 class Pr2_2
 {
     class Matrix
     {
-        private readonly List<List<double>> data = [];      
+        private readonly List<List<double>> data = [];
 
         public Matrix(int h, int m)
         {
@@ -51,7 +49,7 @@ class Pr2_2
                 List<double> l = [];
                 for (int j = 0; j < a.SizeJ(); j++)
                 {
-                    l.Add(a[i,j] + b[i,j]);
+                    l.Add(a[i, j] + b[i, j]);
                 }
                 result.Add(l);
             }
@@ -73,7 +71,7 @@ class Pr2_2
                     double c = 0;
                     for (int k = 0; k < a.SizeJ(); k++)
                     {
-                        c += a[i,k] * b[k,j];
+                        c += a[i, k] * b[k, j];
                     }
                     l.Add(c);
                 }
@@ -93,12 +91,12 @@ class Pr2_2
                 List<double> l = [];
                 for (int j = 0; j < a.SizeJ(); j++)
                 {
-                    l.Add(a[i,j] * b);
+                    l.Add(a[i, j] * b);
                 }
                 result.Add(l);
             }
             return new Matrix(result);
-        }      
+        }
 
         public Matrix GetTranspose()
         {
@@ -108,7 +106,7 @@ class Pr2_2
                 List<double> row = [];
                 for (int j = 0; j < SizeJ(); j++)
                 {
-                    row.Add(this[j,i]);
+                    row.Add(this[j, i]);
                 }
                 t.Add(row);
             }
@@ -172,7 +170,7 @@ class Pr2_2
                 for (int j = 0; j < SizeJ(); j++)
                 {
                     if (j == col) continue;
-                    newRow.Add(this[i,j]);
+                    newRow.Add(this[i, j]);
                 }
                 minor.Add(newRow);
             }
@@ -239,7 +237,7 @@ class Pr2_2
                 List<double> row = [];
                 for (int j = 0; j < SizeJ(); j++)
                 {
-                    double value = this[i,j];
+                    double value = this[i, j];
                     if (Math.Abs(value) < tolerance)
                         row.Add(0.0);
                     else
@@ -257,7 +255,7 @@ class Pr2_2
                 List<double> row = [];
                 for (int j = 0; j < SizeJ(); j++)
                 {
-                    row.Add(Math.Round(this[i,j], decimals));
+                    row.Add(Math.Round(this[i, j], decimals));
                 }
                 rounded.Add(row);
             }
@@ -346,7 +344,7 @@ class Pr2_2
 
                 for (int j = 0; j < SizeJ(); j++)
                 {
-                    this[i,j] = int.Parse(values[j]);
+                    this[i, j] = int.Parse(values[j]);
                 }
             }
         }
@@ -357,7 +355,7 @@ class Pr2_2
             {
                 for (int j = 0; j < SizeJ(); j++)
                 {
-                    this[i,j] = random.Next(a, b + 1);
+                    this[i, j] = random.Next(a, b + 1);
                 }
             }
             Console.WriteLine($"Матрица заполнена случайными значениями в диапазоне [{a}:{b}]");
@@ -426,8 +424,8 @@ class Pr2_2
         Matrix o6 = Matrix.Solve(m1, m3);
         Matrix o7 = m1 * o6;
         double det = m1.GetDet();
-        Matrix o8 = (m1|m3).GetRREF();
-        Matrix o9 = (m1|Matrix.Identity(m1.SizeI())).GetRREF();
+        Matrix o8 = (m1 | m3).GetRREF();
+        Matrix o9 = (m1 | Matrix.Identity(m1.SizeI())).GetRREF();
 
         Console.Write(
             $"матрица m1:\n{m1}\n" +
@@ -440,10 +438,9 @@ class Pr2_2
             $"матрица обратная m1 метод Жордана—Гаусса:\n{o9.Round(true)}\n" +
             $"матрица m3:\n{m3}\n" +
             $"решения СЛАУ[m1|m3] через обратную матрицу:\n{o6.Round(true)}\n" +
-            $"проверка решения СЛАУ(m1*решение):\n{o7.Round(true)}\n" +         
-            $"решения СЛАУ[m1|m3] через метод Гаусса:\n{o8.Round(true)}\n"+
-            $"Определитель m1:\n{det}\n" 
+            $"проверка решения СЛАУ(m1*решение):\n{o7.Round(true)}\n" +
+            $"решения СЛАУ[m1|m3] через метод Гаусса:\n{o8.Round(true)}\n" +
+            $"Определитель m1:\n{det}\n"
             );
     }
 }
-
