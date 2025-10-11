@@ -2,8 +2,8 @@
 {
     private static void Main()
     {
-        int p = 2;
-        int z = 2;
+        int p = 3;
+        int z = 3;
 
         switch (p)
         {
@@ -15,6 +15,12 @@
                     _ = new Pr2(z);
                 else
                     _ = new Pr2_2();
+                break;
+            case 3:
+                if (z != 3)
+                    _ = new Pr3(z);
+                else
+                    _ = new Pr3_2();
                 break;
         }
     }
