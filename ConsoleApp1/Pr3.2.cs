@@ -2,20 +2,21 @@
 {
     class Table
     {
-        public int TableNumber;
+        public int TableId;
         public string TableLocation;
         public int SeatsCount;
-        public Dictionary<int, Booking> TimeSlots = [];
+        public Dictionary<int, Booking?> TimeSlots = [];
 
-        private static int _lastTableNumber = 0;
-        private static List<Table> _tables = [];
+        private static int _lastTableId = 0;
+        private static readonly List<Table> _tables = [];
 
         public Table(string tableLocation, int seatsCount)
         {
-            _lastTableNumber++;
-            TableNumber = _lastTableNumber;
+            _lastTableId++;
+            TableId = _lastTableId;
             TableLocation = tableLocation;
             SeatsCount = seatsCount;
+            InitializationTimeSlots();
             _tables.Add(this);
         }
 
@@ -24,28 +25,43 @@
             _tables.Remove(this);
         }
 
+        public static Table Create()
+        {
+            Console.WriteLine("Введите расположение стола:");
+            string location = Console.ReadLine()!;
+            Console.WriteLine("Введите количесво мест:");
+            int count = Convert.ToInt32(Console.ReadLine()!);
+            return new Table(location, count);
+        }
+        
+        private void InitializationTimeSlots()
+        {
+            for (int i = 0; i < 24; i++)
+                TimeSlots.Add(i, null);
+        }
+
         private static Table? FindById(int id)
         {
             foreach (Table item in _tables)
             {
-                if (item.TableNumber == id)
+                if (item.TableId == id)
                     return item;
             }
             Console.WriteLine($"\nОбъект с ID {id} не найден");
             return null;
         }
 
-
         public void DisplayInfo()
         {
             Console.WriteLine(
-                $"\nID: {TableNumber}" +
-                $"\nРасположение: {TableLocation}" +
+                $"\nID стола: {TableId}" +
+                $"\nРасположение стола: {TableLocation}" +
                 $"\nКоличество мест: {SeatsCount}" +
-                "\nРасписание: ");
+                "\nРасписание: "
+                );
             for (int i = 0; i < TimeSlots.Count; i++)
             {
-                Console.WriteLine($"{i}:00-{i+1}:00 - {TimeSlots[i]}");
+                Console.WriteLine($"{i}:00-{i+1}:00 - " + (TimeSlots[i] == null ? "свободно":"занято"));
             }
         }
 
@@ -74,16 +90,60 @@
 
     class Booking
     {
+        public int BookingId;
+        public string ClientName;
+        public string PhoneNumber;
+        public int StartTime;
+        public int EndTime;
+        public string Comment;
+        public Table AssignedTable;
+
+        private static int _lastBookingId = 0;
+        private static readonly List<Booking> _booking = [];
+
+        public Booking(string clientName, string phoneNumber, int startTime, int endTime, string comment, Table assignedTable)
+        {
+            _lastBookingId++;
+            BookingId = _lastBookingId;
+            ClientName = clientName;
+            PhoneNumber = phoneNumber;
+            StartTime = startTime;
+            EndTime = endTime;
+            Comment = comment;
+            AssignedTable = assignedTable;
+            _booking.Add(this);
+        }
+
+        public void DisplayInfo()
+        {
+            Console.WriteLine(
+                $"\nID клиента: {BookingId}" +
+                $"\nИмя клиента: {ClientName}" +
+                $"\nНомер телефона клиента: {PhoneNumber}" +
+                $"\nВремя начала брони: {StartTime}:00" +
+                $"\nВремя окончания брони: {EndTime}:00" +
+                $"\nКомментарий: {Comment}" +
+                $"\nНазначенный столик: {AssignedTable.TableId}"
+                );
+        }
+
     }
 
     public Pr3_2()
     {
-        Table a = new("У окна", 3);
-        Table b = new("У входа", 5);
-        List<Table> TableList = [a, b];
+        Table t1 = new("У окна", 3);
+        Table t2 = new("У входа", 5);
+        List<Table> TableList = [t1, t2];
 
-        for (int i = 0;i < TableList.Count;i++)
-            TableList[i].DisplayInfo();
+        Booking b1 = new("Василий", "+79708883535", 10, 13, "ХАХАХАХ", t1);
+        Booking b2 = new("Георгий", "+79708883536", 15, 19, "ХАХАХАХ", t2);
+        List<Booking> BookingList = [b1, b2];
+
+        foreach (Table t in TableList)
+            t.DisplayInfo();
+
+        foreach (Booking b in BookingList)
+            b.DisplayInfo();
 
         Table.DisplayInfo(123);
     }
