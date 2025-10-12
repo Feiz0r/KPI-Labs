@@ -51,6 +51,14 @@
             return null;
         }
 
+        public static bool ContainsId(int id)
+        {
+            if (FindById(id) == null)
+                return false;
+            else
+                return true;
+        }
+
         public void DisplayInfo()
         {
             Console.WriteLine(
@@ -139,12 +147,77 @@
         Booking b2 = new("Георгий", "+79708883536", 15, 19, "ХАХАХАХ", t2);
         List<Booking> BookingList = [b1, b2];
 
-        foreach (Table t in TableList)
-            t.DisplayInfo();
+        void tableMenu()
+        {
+            Console.WriteLine("\n 1.Создать \n 2.Редактировать \n 3.Информация \n 4.Список всех столов");
+            int m = Convert.ToInt32(Console.ReadLine());
+            int id;
+            switch (m)
+            {
+                case 1:
+                    Table t = Table.Create();
+                    TableList.Add(t);
+                    break;
+                case 2:
+                    Console.WriteLine("\nВведите id стола:");
+                    id = Convert.ToInt32(Console.ReadLine());
+
+                    if (!Table.ContainsId(id))
+                        return;
+
+                    Console.WriteLine("\nВведите новое расположение (или оставьте пустым):");
+                    string loc = Console.ReadLine()!;
+                    Console.WriteLine("\nВведите новое количесво мест (или оставьте пустым):");
+                    string scs = Console.ReadLine()!;
+                    int sc = -1;
+                    if (scs != null)
+                        sc = Convert.ToInt32(scs);
+
+                    Table.Edit(id, loc, sc);
+                    break;
+                case 3:
+                    Console.WriteLine("\nВведите id стола:");
+                    id = Convert.ToInt32(Console.ReadLine());
+                    Table.DisplayInfo(id);
+                    break;
+                case 4:
+                    foreach (Table v in TableList)
+                        v.DisplayInfo();
+                    break;
+            }
+        }
+
+        void bookingMenu()
+        {
+            Console.WriteLine("\n 1.Создать \n 2.Редактировать \n 3.Удалить \n3.Информация \n 4.Список бронирований");
+            int m = Convert.ToInt32(Console.ReadLine());
+            int id;
+            switch (m)
+            {
+                case 1:
+                    break;
+            }
+        }
 
         foreach (Booking b in BookingList)
             b.DisplayInfo();
 
         Table.DisplayInfo(123);
+
+        for (; ; )
+        {
+            Console.WriteLine("\n1.Стол \n2.Бронь");
+            int n = Convert.ToInt32(Console.ReadLine());
+            switch (n)
+            {
+                case 1:
+                    tableMenu();
+                    break;
+                case 2:
+                    bookingMenu();
+                    break;
+            }
+        }
+        
     }
 }
