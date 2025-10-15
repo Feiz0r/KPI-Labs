@@ -317,20 +317,11 @@
             if (!lastDigits.All(char.IsDigit))
                 throw new ArgumentException("Последние 4 цифры должны содержать только числа");
 
-            List<Booking> foundBookings = [];
-            foreach (Booking booking in _bookings)
-            {
-                bool nameMatches = booking.ClientName.Trim().Equals(
-                    clientName.Trim(),
-                    StringComparison.OrdinalIgnoreCase
-                );
-
-                bool phoneMatches = booking.PhoneNumber.EndsWith(lastDigits);
-                if (nameMatches && phoneMatches)             
-                    foundBookings.Add(booking);
-                
-            }
-
+            var foundBookings = _bookings.Where(t =>
+                t.ClientName.Trim().Equals(clientName.Trim(), StringComparison.OrdinalIgnoreCase) &&
+                t.PhoneNumber.EndsWith(lastDigits)
+                ).ToList();
+            
             return foundBookings;
         }
 
