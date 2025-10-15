@@ -19,7 +19,7 @@
     {
         if (a == 0)
             return b;
-        return Z1R(a / 10, b * 10 + (a % 10));
+        return Z1R(a / 10, (b * 10) + (a % 10));
     }
 
     private static void Z1()
