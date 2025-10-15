@@ -266,11 +266,11 @@
             Console.WriteLine("Введите номер телефона:");
             string phone = Console.ReadLine()!;
 
-            Console.WriteLine("Введите время начала брони (0-23, где 0 = 0:00-1:00):");
+            Console.WriteLine("Введите время начала брони (0-23):");
             if (!int.TryParse(Console.ReadLine(), out int start) || start < 0 || start >= 24)
                 throw new FormatException("Некорректное время начала");
 
-            Console.WriteLine("Введите время окончания брони (1-24, должно быть больше времени начала):");
+            Console.WriteLine("Введите время окончания брони (1-24):");
             if (!int.TryParse(Console.ReadLine(), out int end) || end <= start || end > 24)
                 throw new FormatException("Некорректное время окончания");
 
