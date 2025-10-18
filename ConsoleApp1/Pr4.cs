@@ -509,15 +509,15 @@ class Pr4
     class ShowOrderManagementMenu
     {
         private List<Dish> menu;
-        private List<Order> orders;
+        private List<Order> _orders;
 
         public ShowOrderManagementMenu(List<Dish> initialMenu)
         {
             menu = initialMenu;
-            orders = new List<Order>();
+            _orders = new List<Order>();
         }
 
-        public void ShowMainMenu()
+        public void ShowMainMenu(out List<Order> orders)
         {
             while (true)
             {
@@ -557,6 +557,7 @@ class Pr4
                         DisplayAllOrders();
                         break;
                     case 0:
+                        orders = _orders;
                         return;
                     default:
                         Console.WriteLine("Неверный выбор!");
@@ -567,7 +568,7 @@ class Pr4
 
         public List<Order> GetOrders()
         {
-            return orders;
+            return _orders;
         }
 
         private void CreateOrder()
@@ -575,7 +576,7 @@ class Pr4
             var order = Order.Create(menu);
             if (order != null)
             {
-                orders.Add(order);
+                _orders.Add(order);
                 Console.WriteLine($"\nЗаказ #{order.Id} успешно создан!");
                 order.DisplayInfo();
             }
@@ -583,7 +584,7 @@ class Pr4
 
         private void EditOrder()
         {
-            if (orders.Count == 0)
+            if (_orders.Count == 0)
             {
                 Console.WriteLine("Нет доступных заказов!");
                 return;
@@ -591,7 +592,7 @@ class Pr4
 
             DisplayAllOrders();
             int orderId = InputInt("Введите ID заказа для изменения: ");
-            var order = Order.FindById(orders, orderId);
+            var order = Order.FindById(_orders, orderId);
 
             if (order == null)
             {
@@ -604,7 +605,7 @@ class Pr4
 
         private void DisplayOrderInfo()
         {
-            if (orders.Count == 0)
+            if (_orders.Count == 0)
             {
                 Console.WriteLine("Нет доступных заказов!");
                 return;
@@ -612,7 +613,7 @@ class Pr4
 
             DisplayAllOrders();
             int orderId = InputInt("Введите ID заказа для просмотра: ");
-            var order = Order.FindById(orders, orderId);
+            var order = Order.FindById(_orders, orderId);
 
             if (order == null)
             {
@@ -625,13 +626,13 @@ class Pr4
 
         private void CloseOrder()
         {
-            if (orders.Count == 0)
+            if (_orders.Count == 0)
             {
                 Console.WriteLine("Нет доступных заказов!");
                 return;
             }
 
-            var openOrders = orders.Where(o => !o.IsClosed).ToList();
+            var openOrders = _orders.Where(o => !o.IsClosed).ToList();
             if (openOrders.Count == 0)
             {
                 Console.WriteLine("Нет открытых заказов!");
@@ -645,7 +646,7 @@ class Pr4
             }
 
             int orderId = InputInt("Введите ID заказа для закрытия: ");
-            var order = Order.FindById(orders, orderId);
+            var order = Order.FindById(_orders, orderId);
 
             if (order == null)
             {
@@ -664,13 +665,13 @@ class Pr4
 
         private void PrintCheck()
         {
-            if (orders.Count == 0)
+            if (_orders.Count == 0)
             {
                 Console.WriteLine("Нет доступных заказов!");
                 return;
             }
 
-            var closedOrders = orders.Where(o => o.IsClosed).ToList();
+            var closedOrders = _orders.Where(o => o.IsClosed).ToList();
             if (closedOrders.Count == 0)
             {
                 Console.WriteLine("Нет закрытых заказов!");
@@ -684,7 +685,7 @@ class Pr4
             }
 
             int orderId = InputInt("Введите ID заказа для печати чека: ");
-            var order = Order.FindById(orders, orderId);
+            var order = Order.FindById(_orders, orderId);
 
             if (order == null)
             {
@@ -697,14 +698,14 @@ class Pr4
 
         private void DisplayAllOrders()
         {
-            if (orders.Count == 0)
+            if (_orders.Count == 0)
             {
                 Console.WriteLine("Нет заказов!");
                 return;
             }
 
             Console.WriteLine("\nВСЕ ЗАКАЗЫ:");
-            foreach (var order in orders)
+            foreach (var order in _orders)
             {
                 order.DisplayInfo(false);
                 Console.WriteLine();
@@ -714,14 +715,14 @@ class Pr4
 
     class DishManager
     {
-        private List<Dish> menu;
+        private List<Dish> _menu;
 
         public DishManager(List<Dish> initialMenu)
         {
-            menu = initialMenu;
+            _menu = initialMenu;
         }
 
-        public void ShowDishManagementMenu()
+        public void ShowDishManagementMenu(out List<Dish> menu)
         {
             while (true)
             {
@@ -757,6 +758,7 @@ class Pr4
                         FindDishesByCategory();
                         break;
                     case 0:
+                        menu = _menu;
                         return;
                     default:
                         Console.WriteLine("Неверный выбор!");
@@ -769,14 +771,14 @@ class Pr4
         {
             Console.WriteLine("\n  СОЗДАНИЕ НОВОГО БЛЮДА  ");
             var newDish = Dish.Create();
-            menu.Add(newDish);
+            _menu.Add(newDish);
             Console.WriteLine($"\nБлюдо \"{newDish.Name}\" успешно создано с ID: {newDish.Id}");
             newDish.DisplayInfo();
         }
 
         private void EditDish()
         {
-            if (menu.Count == 0)
+            if (_menu.Count == 0)
             {
                 Console.WriteLine("Меню пусто! Нет блюд для изменения.");
                 return;
@@ -784,7 +786,7 @@ class Pr4
 
             DisplayAllDishes();
             int dishId = InputInt("\nВведите ID блюда для изменения: ");
-            var dish = Dish.FindById(menu, dishId);
+            var dish = Dish.FindById(_menu, dishId);
 
             if (dish == null)
             {
@@ -843,7 +845,7 @@ class Pr4
 
         private void DeleteDish()
         {
-            if (menu.Count == 0)
+            if (_menu.Count == 0)
             {
                 Console.WriteLine("Меню пусто! Нет блюд для удаления.");
                 return;
@@ -851,7 +853,7 @@ class Pr4
 
             DisplayAllDishes();
             int dishId = InputInt("\nВведите ID блюда для удаления: ");
-            var dish = Dish.FindById(menu, dishId);
+            var dish = Dish.FindById(_menu, dishId);
 
             if (dish == null)
             {
@@ -867,7 +869,7 @@ class Pr4
 
             if (confirmation == 1)
             {
-                menu.Remove(dish);
+                _menu.Remove(dish);
                 Console.WriteLine($"Блюдо \"{dish.Name}\" успешно удалено!");
             }
             else
@@ -878,14 +880,14 @@ class Pr4
 
         private void DisplayAllDishes()
         {
-            if (menu.Count == 0)
+            if (_menu.Count == 0)
             {
                 Console.WriteLine("Меню пусто!");
                 return;
             }
 
             Console.WriteLine("\n  ВСЕ БЛЮДА В МЕНЮ  ");
-            foreach (var dish in menu)
+            foreach (var dish in _menu)
             {
                 dish.DisplayInfo();
             }
@@ -893,14 +895,14 @@ class Pr4
 
         private void FindDishById()
         {
-            if (menu.Count == 0)
+            if (_menu.Count == 0)
             {
                 Console.WriteLine("Меню пусто!");
                 return;
             }
 
             int dishId = InputInt("Введите ID блюда для поиска: ");
-            var dish = Dish.FindById(menu, dishId);
+            var dish = Dish.FindById(_menu, dishId);
 
             if (dish == null)
             {
@@ -914,7 +916,7 @@ class Pr4
 
         private void FindDishesByCategory()
         {
-            if (menu.Count == 0)
+            if (_menu.Count == 0)
             {
                 Console.WriteLine("Меню пусто!");
                 return;
@@ -934,7 +936,7 @@ class Pr4
             }
 
             var selectedCategory = (DishCategory)categoryId;
-            var dishesInCategory = menu.Where(d => d.Category == selectedCategory).ToList();
+            var dishesInCategory = _menu.Where(d => d.Category == selectedCategory).ToList();
 
             if (dishesInCategory.Count == 0)
             {
@@ -951,7 +953,7 @@ class Pr4
 
         public List<Dish> GetMenu()
         {
-            return menu;
+            return _menu;
         }
     }
 
@@ -1097,11 +1099,10 @@ class Pr4
                 switch (choice)
                 {
                     case 1:
-                        showOrderManagementMenu.ShowMainMenu();
-                        orders = showOrderManagementMenu.GetOrders();
+                        showOrderManagementMenu.ShowMainMenu(out orders);
                         break;
                     case 2:
-                        dishManager.ShowDishManagementMenu();
+                        dishManager.ShowDishManagementMenu(out menu);
                         break;
                     case 3:
                         Dish.DisplayMenu(menu);
