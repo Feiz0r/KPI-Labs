@@ -2,7 +2,7 @@
 {
     private static void Main()
     {
-        int p = 4;
+        int p = 5;
         int z = 3;
 
         switch (p)
@@ -24,6 +24,9 @@
                 break;
             case 4:
                 _ = new Pr4();
+                break;
+            case 5:
+                _ = new Pr5();
                 break;
         }
     }

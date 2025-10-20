@@ -1,6 +1,4 @@
-﻿using System.Runtime.InteropServices;
-
-class Pr4
+﻿class Pr4
 {
     public enum DishCategory
     {
@@ -13,7 +11,6 @@ class Pr4
         Desserts,
         Drinks
     }
-
     public static string GetCategoryRussianName(DishCategory category)
     {
         return category switch
@@ -40,34 +37,20 @@ class Pr4
         }
         return input;
     }
-
     public static int InputInt(string prompt)
     {
         while (true)
         {
-            try
-            {
-                return Convert.ToInt32(Input(prompt));
-            }
-            catch (FormatException)
-            {
-                Console.WriteLine("Ошибка: введите целое число");
-            }
+            try { return Convert.ToInt32(Input(prompt)); }
+            catch (FormatException) { Console.WriteLine("Ошибка: введите целое число"); }
         }
     }
-
     public static double InputDouble(string prompt)
     {
         while (true)
         {
-            try
-            {
-                return Convert.ToDouble(Input(prompt));
-            }
-            catch (FormatException)
-            {
-                Console.WriteLine("Ошибка: введите число");
-            }
+            try { return Convert.ToDouble(Input(prompt)); }
+            catch (FormatException) { Console.WriteLine("Ошибка: введите число"); }
         }
     }
 
@@ -84,14 +67,7 @@ class Pr4
 
         private static int _lastId = 0;
 
-        public Dish(
-            string name,
-            string composition,
-            string weight,
-            double price,
-            DishCategory category,
-            int cookingTime,
-            List<string> type)
+        public Dish(string name, string composition, string weight, double price, DishCategory category, int cookingTime, List<string> type)
         {
             _lastId++;
 
@@ -104,11 +80,9 @@ class Pr4
             Type = type;
             Id = _lastId;
         }
-
         public static Dish Create()
         {
             Console.WriteLine("Создание нового блюда:");
-
             string? name = Input("Введите название блюда: ");
             string? composition = Input("Введите состав блюда: ");
             string? weight = Input("Введите вес: ");
@@ -131,36 +105,84 @@ class Pr4
             return new Dish(name, composition, weight, price, category, cookingTime, type);
         }
 
-        public void Edit(
-            string name = "",
-            string composition = "",
-            string weight = "",
-            double price = -1,
-            DishCategory? category = null,
-            int cookingTime = -1,
-            List<string>? type = null)
+        public void Edit()
         {
-            if (!string.IsNullOrEmpty(name))
-                Name = name;
-            if (!string.IsNullOrEmpty(composition))
-                Composition = composition;
-            if (!string.IsNullOrEmpty(weight))
-                Weight = weight;
-            if (!double.IsNegative(price))
-                Price = price;
-            if (category != null)
-                Category = category.Value;
-            if (!int.IsNegative(cookingTime))
-                CookingTime = cookingTime;
-            if (type != null)
-                Type = type;
+            Console.WriteLine("РЕДАКТИРОВАНИЕ БЛЮДА");
+            while (true)
+            {
+                Console.WriteLine("\nТекущие данные блюда:");
+                DisplayInfo();
+                Console.WriteLine("\nОпции редактирования:");
+                Console.WriteLine("1 - Изменить название");
+                Console.WriteLine("2 - Изменить состав");
+                Console.WriteLine("3 - Изменить вес");
+                Console.WriteLine("4 - Изменить цену");
+                Console.WriteLine("5 - Изменить категорию");
+                Console.WriteLine("6 - Изменить время приготовления");
+                Console.WriteLine("7 - Изменить типы");
+                Console.WriteLine("8 - Завершить редактирование");
 
+                int choice = InputInt("Выберите опцию: ");
+                switch (choice)
+                {
+                    case 1:
+                        Name = Input("Введите новое название: ");
+                        Console.WriteLine("Название обновлено!");
+                        break;
+                    case 2:
+                        Composition = Input("Введите новый состав: ");
+                        Console.WriteLine("Состав обновлен!");
+                        break;
+                    case 3:
+                        Weight = Input("Введите новый вес: ");
+                        Console.WriteLine("Вес обновлен!");
+                        break;
+                    case 4:
+                        Price = InputDouble("Введите новую цену: ");
+                        Console.WriteLine("Цена обновлена!");
+                        break;
+                    case 5:
+                        ChangeCategory();
+                        break;
+                    case 6:
+                        CookingTime = InputInt("Введите новое время приготовления (в минутах): ");
+                        Console.WriteLine("Время приготовления обновлено!");
+                        break;
+                    case 7:
+                        ChangeTypes();
+                        break;
+                    case 8:
+                        Console.WriteLine("Изменения сохранены!");
+                        return;
+                    default:
+                        Console.WriteLine("Неверный выбор!");
+                        break;
+                }
+            }
+        }
+        private void ChangeCategory()
+        {
+            Console.WriteLine("\nДоступные категории:");
+            var categories = Enum.GetValues<DishCategory>();
+            for (int i = 0; i < categories.Length; i++)
+                Console.WriteLine($"{i} - {GetCategoryRussianName(categories[i])}");
+            int categoryChoice = InputInt("Выберите категорию: ");
+            if (categoryChoice >= 0 && categoryChoice < categories.Length)
+            {
+                Category = categories[categoryChoice];
+                Console.WriteLine("Категория обновлена!");
+            }
+            else Console.WriteLine("Неверный выбор категории!");
+        }
+        private void ChangeTypes()
+        {
+            Console.WriteLine("\nТекущие типы: " + string.Join(", ", Type));
+            string typesInput = Input("Введите новые типы через запятую: ");
+            Type = typesInput.Split(',').Select(t => t.Trim()).Where(t => !string.IsNullOrEmpty(t)).ToList();
+            Console.WriteLine("Типы обновлены!");
         }
 
-        public static Dish? FindById(List<Dish> dishList, int id)
-        {
-            return dishList.Find(t => t.Id == id);
-        }
+        public static Dish? FindById(List<Dish> dishList, int id) => dishList.Find(t => t.Id == id);
 
         public void DisplayInfo()
         {
@@ -181,10 +203,8 @@ class Pr4
                 foreach (var type in Type)
                     Console.WriteLine($"  - {type}");
             }
-            else
-                Console.WriteLine("Типы: не указаны");
+            else Console.WriteLine("Типы: не указаны");
         }
-
         public static void DisplayMenu(List<Dish> dish)
         {
             Console.WriteLine("\n");
@@ -192,15 +212,12 @@ class Pr4
             {
                 Console.WriteLine($"\n{GetCategoryRussianName(category).ToUpper()}:");
                 foreach (var d in dish.Where(t => t.Category == category).ToList())
-                {
                     Console.WriteLine(
                         $"\"{d.Id}.{d.Name}\" - {d.Weight}г. | {d.Price}р.     ---     {d.Type.First()}!\n" +
                         $"  Состав: {d.Composition.ToLower()}"
                         );
-                }
             }
         }
-
     }
 
     class Order
@@ -230,53 +247,36 @@ class Pr4
             TotalCost = 0;
             UpdateTotalCost();
         }
-
-        private void UpdateTotalCost() => TotalCost = DishDictionary.Sum(t => t.Key.Price * t.Value);
-
         public static Order? Create(List<Dish> menu)
         {
             Console.WriteLine("\nСОЗДАНИЕ НОВОГО ЗАКАЗА");
-
             int tableId = InputInt("Введите номер стола: ");
             int waiter = InputInt("Введите номер официанта: ");
             string comment = Input("Введите комментарий: ");
-
             Dictionary<Dish, int> dishDictionary = new Dictionary<Dish, int>();
-
             while (true)
             {
                 Console.WriteLine("\nДоступные блюда:");
                 Dish.DisplayMenu(menu);
-
                 int dishId = InputInt("\nВведите ID блюда для добавления (0 - завершить заказ): ");
-
-                if (dishId == 0)
-                    break;
-
+                if (dishId == 0) break;
                 var selectedDish = Dish.FindById(menu, dishId);
                 if (selectedDish == null)
                 {
                     Console.WriteLine("Блюдо с таким ID не найдено!");
                     continue;
                 }
-
                 int quantity = InputInt($"Введите количество для \"{selectedDish.Name}\": ");
-
-                if (dishDictionary.ContainsKey(selectedDish))
-                    dishDictionary[selectedDish] += quantity;
-                else
-                    dishDictionary.Add(selectedDish, quantity);
-
+                if (dishDictionary.ContainsKey(selectedDish)) dishDictionary[selectedDish] += quantity;
+                else dishDictionary.Add(selectedDish, quantity);
                 Console.WriteLine("\nТекущий заказ:");
                 DisplayOrderItems(dishDictionary);
             }
-
             if (dishDictionary.Count == 0)
             {
                 Console.WriteLine("Заказ не создан - нет блюд!");
                 return null;
             }
-
             return new Order(tableId, dishDictionary, waiter, comment);
         }
 
@@ -287,35 +287,16 @@ class Pr4
             Console.WriteLine($"Официант: {Waiter}");
             Console.WriteLine($"Время принятия: {OrderAcceptanceTime:dd.MM.yyyy HH:mm}");
             Console.WriteLine($"Статус: {(IsClosed ? "ЗАКРЫТ" : "ОТКРЫТ")}");
-
-            if (IsClosed)
-                Console.WriteLine($"Время закрытия: {OrderClosingTime:dd.MM.yyyy HH:mm}");
-
+            if (IsClosed) Console.WriteLine($"Время закрытия: {OrderClosingTime:dd.MM.yyyy HH:mm}");
             if (detailed)
             {
                 Console.WriteLine("\nСостав заказа:");
                 DisplayOrderItems(DishDictionary);
             }
-
             Console.WriteLine($"\nОбщая стоимость: {TotalCost:F2}р");
-
             if (!string.IsNullOrEmpty(Comment))
                 Console.WriteLine($"Комментарий: {Comment}");
         }
-
-        public void Close()
-        {
-            if (IsClosed)
-            {
-                Console.WriteLine("Заказ уже закрыт!");
-                return;
-            }
-
-            OrderClosingTime = DateTime.Now;
-            UpdateTotalCost();
-            Console.WriteLine($"Заказ #{Id} закрыт. Общая стоимость: {TotalCost:F2}р");
-        }
-
         public void PrintCheck()
         {
             if (!IsClosed)
@@ -323,7 +304,6 @@ class Pr4
                 Console.WriteLine("Невозможно распечатать чек для открытого заказа!");
                 return;
             }
-
             Console.WriteLine("\n" + new string('=', 40));
             Console.WriteLine("             ЧЕК");
             Console.WriteLine(new string('=', 40));
@@ -333,32 +313,36 @@ class Pr4
             Console.WriteLine($"Время принятия: {OrderAcceptanceTime:dd.MM.yyyy HH:mm}");
             Console.WriteLine($"Время закрытия: {OrderClosingTime:dd.MM.yyyy HH:mm}");
             Console.WriteLine(new string('-', 40));
-
             foreach (var item in DishDictionary)
             {
                 double itemTotal = item.Key.Price * item.Value;
                 Console.WriteLine($"{item.Key.Name,-20} x{item.Value,2} {itemTotal,8:F2}р");
                 Console.WriteLine($"  ({item.Key.Weight}g)");
             }
-
             Console.WriteLine(new string('-', 40));
             Console.WriteLine($"ИТОГО: {TotalCost,26:F2}р");
-
             if (!string.IsNullOrEmpty(Comment))
             {
                 Console.WriteLine(new string('-', 40));
                 Console.WriteLine($"Комментарий: {Comment}");
             }
-
             Console.WriteLine(new string('=', 40));
             Console.WriteLine("       СПАСИБО ЗА ВИЗИТ!");
             Console.WriteLine(new string('=', 40));
         }
-
-        public static Order? FindById(List<Order> orderList, int id)
+        public void Close()
         {
-            return orderList.Find(o => o.Id == id);
+            if (IsClosed)
+            {
+                Console.WriteLine("Заказ уже закрыт!");
+                return;
+            }
+            OrderClosingTime = DateTime.Now;
+            UpdateTotalCost();
+            Console.WriteLine($"Заказ #{Id} закрыт. Общая стоимость: {TotalCost:F2}р");
         }
+
+        public static Order? FindById(List<Order> orderList, int id) => orderList.Find(o => o.Id == id);
 
         public void Edit(List<Dish> menu)
         {
@@ -367,23 +351,18 @@ class Pr4
                 Console.WriteLine("Невозможно изменить закрытый заказ!");
                 return;
             }
-
             Console.WriteLine("ИЗМЕНЕНИЕ ЗАКАЗА");
-
             while (true)
             {
                 Console.WriteLine("\nТекущий состав заказа:");
                 DisplayOrderItems(DishDictionary);
-
                 Console.WriteLine("\nОпции изменения:");
                 Console.WriteLine("1 - Добавить блюдо");
                 Console.WriteLine("2 - Изменить количество блюда");
                 Console.WriteLine("3 - Удалить блюдо");
                 Console.WriteLine("4 - Изменить комментарий");
                 Console.WriteLine("5 - Завершить изменение");
-
                 int choice = InputInt("Выберите опцию: ");
-
                 switch (choice)
                 {
                     case 1:
@@ -409,31 +388,22 @@ class Pr4
                 }
             }
         }
-
         private void AddDishToOrder(List<Dish> menu)
         {
             Console.WriteLine("\nДоступные блюда:");
             Dish.DisplayMenu(menu);
-
             int dishId = InputInt("Введите ID блюда для добавления: ");
             var selectedDish = Dish.FindById(menu, dishId);
-
             if (selectedDish == null)
             {
                 Console.WriteLine("Блюдо с таким ID не найдено!");
                 return;
             }
-
             int quantity = InputInt($"Введите количество для \"{selectedDish.Name}\": ");
-
-            if (DishDictionary.ContainsKey(selectedDish))
-                DishDictionary[selectedDish] += quantity;
-            else
-                DishDictionary.Add(selectedDish, quantity);
-
+            if (DishDictionary.ContainsKey(selectedDish)) DishDictionary[selectedDish] += quantity;
+            else DishDictionary.Add(selectedDish, quantity);
             Console.WriteLine("Блюдо добавлено в заказ!");
         }
-
         private void ChangeDishQuantity()
         {
             if (DishDictionary.Count == 0)
@@ -441,18 +411,14 @@ class Pr4
                 Console.WriteLine("В заказе нет блюд!");
                 return;
             }
-
             int dishId = InputInt("Введите ID блюда для изменения количества: ");
             var dish = DishDictionary.Keys.FirstOrDefault(d => d.Id == dishId);
-
             if (dish == null)
             {
                 Console.WriteLine("Блюдо с таким ID не найдено в заказе!");
                 return;
             }
-
             int newQuantity = InputInt($"Введите новое количество для \"{dish.Name}\": ");
-
             if (newQuantity <= 0)
             {
                 DishDictionary.Remove(dish);
@@ -464,7 +430,6 @@ class Pr4
                 Console.WriteLine("Количество обновлено!");
             }
         }
-
         private void RemoveDishFromOrder()
         {
             if (DishDictionary.Count == 0)
@@ -472,20 +437,16 @@ class Pr4
                 Console.WriteLine("В заказе нет блюд!");
                 return;
             }
-
             int dishId = InputInt("Введите ID блюда для удаления: ");
             var dish = DishDictionary.Keys.FirstOrDefault(d => d.Id == dishId);
-
             if (dish == null)
             {
                 Console.WriteLine("Блюдо с таким ID не найдено в заказе!");
                 return;
             }
-
             DishDictionary.Remove(dish);
             Console.WriteLine("Блюдо удалено из заказа!");
         }
-
         private static void DisplayOrderItems(Dictionary<Dish, int> dishDictionary)
         {
             if (dishDictionary.Count == 0)
@@ -502,20 +463,14 @@ class Pr4
                 Console.WriteLine($"(id:{item.Key.Id}) {item.Key.Name} x{item.Value} = {itemTotal:F2}р");
             }
             Console.WriteLine($"Итого: {total:F2}р");
-
         }
+        private void UpdateTotalCost() => TotalCost = DishDictionary.Sum(t => t.Key.Price * t.Value);
     }
 
-    class ShowOrderManagementMenu
+    class OrderMenu(List<Pr4.Dish> initialMenu)
     {
-        private List<Dish> menu;
-        private List<Order> _orders;
-
-        public ShowOrderManagementMenu(List<Dish> initialMenu)
-        {
-            menu = initialMenu;
-            _orders = new List<Order>();
-        }
+        private List<Dish> menu = initialMenu;
+        private List<Order> _orders = [];
 
         public void ShowMainMenu(out List<Order> orders)
         {
@@ -532,7 +487,6 @@ class Pr4
                 Console.WriteLine("0. Выход");
 
                 int choice = InputInt("Выберите действие: ");
-
                 switch (choice)
                 {
                     case 1:
@@ -566,11 +520,6 @@ class Pr4
             }
         }
 
-        public List<Order> GetOrders()
-        {
-            return _orders;
-        }
-
         private void CreateOrder()
         {
             var order = Order.Create(menu);
@@ -581,7 +530,6 @@ class Pr4
                 order.DisplayInfo();
             }
         }
-
         private void EditOrder()
         {
             if (_orders.Count == 0)
@@ -589,41 +537,16 @@ class Pr4
                 Console.WriteLine("Нет доступных заказов!");
                 return;
             }
-
             DisplayAllOrders();
             int orderId = InputInt("Введите ID заказа для изменения: ");
             var order = Order.FindById(_orders, orderId);
-
             if (order == null)
             {
                 Console.WriteLine("Заказ с таким ID не найден!");
                 return;
             }
-
             order.Edit(menu);
         }
-
-        private void DisplayOrderInfo()
-        {
-            if (_orders.Count == 0)
-            {
-                Console.WriteLine("Нет доступных заказов!");
-                return;
-            }
-
-            DisplayAllOrders();
-            int orderId = InputInt("Введите ID заказа для просмотра: ");
-            var order = Order.FindById(_orders, orderId);
-
-            if (order == null)
-            {
-                Console.WriteLine("Заказ с таким ID не найден!");
-                return;
-            }
-
-            order.DisplayInfo();
-        }
-
         private void CloseOrder()
         {
             if (_orders.Count == 0)
@@ -631,35 +554,28 @@ class Pr4
                 Console.WriteLine("Нет доступных заказов!");
                 return;
             }
-
             var openOrders = _orders.Where(o => !o.IsClosed).ToList();
             if (openOrders.Count == 0)
             {
                 Console.WriteLine("Нет открытых заказов!");
                 return;
             }
-
             Console.WriteLine("Открытые заказы:");
             foreach (var o in openOrders)
-            {
                 o.DisplayInfo(false);
-            }
 
             int orderId = InputInt("Введите ID заказа для закрытия: ");
             var order = Order.FindById(_orders, orderId);
-
             if (order == null)
             {
                 Console.WriteLine("Заказ с таким ID не найден!");
                 return;
             }
-
             if (order.IsClosed)
             {
                 Console.WriteLine("Заказ уже закрыт!");
                 return;
             }
-
             order.Close();
         }
 
@@ -670,32 +586,41 @@ class Pr4
                 Console.WriteLine("Нет доступных заказов!");
                 return;
             }
-
             var closedOrders = _orders.Where(o => o.IsClosed).ToList();
             if (closedOrders.Count == 0)
             {
                 Console.WriteLine("Нет закрытых заказов!");
                 return;
             }
-
             Console.WriteLine("Закрытые заказы:");
             foreach (var o in closedOrders)
-            {
                 o.DisplayInfo(false);
-            }
-
             int orderId = InputInt("Введите ID заказа для печати чека: ");
             var order = Order.FindById(_orders, orderId);
-
             if (order == null)
             {
                 Console.WriteLine("Заказ с таким ID не найден!");
                 return;
             }
-
             order.PrintCheck();
         }
-
+        private void DisplayOrderInfo()
+        {
+            if (_orders.Count == 0)
+            {
+                Console.WriteLine("Нет доступных заказов!");
+                return;
+            }
+            DisplayAllOrders();
+            int orderId = InputInt("Введите ID заказа для просмотра: ");
+            var order = Order.FindById(_orders, orderId);
+            if (order == null)
+            {
+                Console.WriteLine("Заказ с таким ID не найден!");
+                return;
+            }
+            order.DisplayInfo();
+        }
         private void DisplayAllOrders()
         {
             if (_orders.Count == 0)
@@ -703,7 +628,6 @@ class Pr4
                 Console.WriteLine("Нет заказов!");
                 return;
             }
-
             Console.WriteLine("\nВСЕ ЗАКАЗЫ:");
             foreach (var order in _orders)
             {
@@ -713,14 +637,9 @@ class Pr4
         }
     }
 
-    class DishManager
+    class DishManager(List<Pr4.Dish> initialMenu)
     {
-        private List<Dish> _menu;
-
-        public DishManager(List<Dish> initialMenu)
-        {
-            _menu = initialMenu;
-        }
+        private List<Dish> _menu = initialMenu;
 
         public void ShowDishManagementMenu(out List<Dish> menu)
         {
@@ -734,9 +653,7 @@ class Pr4
                 Console.WriteLine("5. Поиск блюда по ID");
                 Console.WriteLine("6. Поиск блюд по категории");
                 Console.WriteLine("0. Назад в главное меню");
-
                 int choice = InputInt("Выберите действие: ");
-
                 switch (choice)
                 {
                     case 1:
@@ -775,7 +692,6 @@ class Pr4
             Console.WriteLine($"\nБлюдо \"{newDish.Name}\" успешно создано с ID: {newDish.Id}");
             newDish.DisplayInfo();
         }
-
         private void EditDish()
         {
             if (_menu.Count == 0)
@@ -783,66 +699,16 @@ class Pr4
                 Console.WriteLine("Меню пусто! Нет блюд для изменения.");
                 return;
             }
-
             DisplayAllDishes();
             int dishId = InputInt("\nВведите ID блюда для изменения: ");
             var dish = Dish.FindById(_menu, dishId);
-
             if (dish == null)
             {
                 Console.WriteLine("Блюдо с таким ID не найдено!");
                 return;
             }
-
-            Console.WriteLine($"\nРедактирование блюда: {dish.Name} (ID: {dish.Id})");
-            Console.WriteLine("Текущая информация:");
-            dish.DisplayInfo();
-
-            Console.WriteLine("\nВведите новые данные (оставьте пустым для сохранения текущего значения):");
-
-            string newName = Input($"Название [{dish.Name}]: ");
-            string newComposition = Input($"Состав [{dish.Composition}]: ");
-            string newWeight = Input($"Вес [{dish.Weight}]: ");
-
-            double newPrice = -1;
-            string priceInput = Input($"Цена [{dish.Price}]: ");
-            if (!string.IsNullOrEmpty(priceInput))
-                double.TryParse(priceInput, out newPrice);
-
-            DishCategory? newCategory = null;
-            Console.WriteLine("Категории:");
-            foreach (var category in Enum.GetValues<DishCategory>())
-            {
-                Console.WriteLine($"{(int)category} - {GetCategoryRussianName(category)}");
-            }
-            string categoryInput = Input($"Категория [{(int)dish.Category}]: ");
-            if (!string.IsNullOrEmpty(categoryInput) && Enum.IsDefined(typeof(DishCategory), int.Parse(categoryInput)))
-                newCategory = (DishCategory)int.Parse(categoryInput);
-
-            int newCookingTime = -1;
-            string cookingTimeInput = Input($"Время приготовления [{dish.CookingTime}]: ");
-            if (!string.IsNullOrEmpty(cookingTimeInput))
-                int.TryParse(cookingTimeInput, out newCookingTime);
-
-            List<string>? newTypes = null;
-            string typesInput = Input($"Типы [{string.Join(", ", dish.Type)}]: ");
-            if (!string.IsNullOrEmpty(typesInput))
-                newTypes = typesInput.Split(',').Select(t => t.Trim()).Where(t => !string.IsNullOrEmpty(t)).ToList();
-
-            dish.Edit(
-                name: string.IsNullOrEmpty(newName) ? "" : newName,
-                composition: string.IsNullOrEmpty(newComposition) ? "" : newComposition,
-                weight: string.IsNullOrEmpty(newWeight) ? "" : newWeight,
-                price: newPrice,
-                category: newCategory,
-                cookingTime: newCookingTime,
-                type: newTypes
-            );
-
-            Console.WriteLine($"\nБлюдо \"{dish.Name}\" успешно обновлено!");
-            dish.DisplayInfo();
+            dish.Edit();
         }
-
         private void DeleteDish()
         {
             if (_menu.Count == 0)
@@ -850,32 +716,24 @@ class Pr4
                 Console.WriteLine("Меню пусто! Нет блюд для удаления.");
                 return;
             }
-
             DisplayAllDishes();
             int dishId = InputInt("\nВведите ID блюда для удаления: ");
             var dish = Dish.FindById(_menu, dishId);
-
             if (dish == null)
             {
                 Console.WriteLine("Блюдо с таким ID не найдено!");
                 return;
             }
-
             Console.WriteLine($"\nВы уверены, что хотите удалить блюдо \"{dish.Name}\"?");
             Console.WriteLine("1 - Да, удалить");
             Console.WriteLine("2 - Нет, отменить");
-
             int confirmation = InputInt("Ваш выбор: ");
-
             if (confirmation == 1)
             {
                 _menu.Remove(dish);
                 Console.WriteLine($"Блюдо \"{dish.Name}\" успешно удалено!");
             }
-            else
-            {
-                Console.WriteLine("Удаление отменено.");
-            }
+            else Console.WriteLine("Удаление отменено.");
         }
 
         private void DisplayAllDishes()
@@ -885,14 +743,10 @@ class Pr4
                 Console.WriteLine("Меню пусто!");
                 return;
             }
-
             Console.WriteLine("\n  ВСЕ БЛЮДА В МЕНЮ  ");
             foreach (var dish in _menu)
-            {
                 dish.DisplayInfo();
-            }
         }
-
         private void FindDishById()
         {
             if (_menu.Count == 0)
@@ -913,7 +767,6 @@ class Pr4
             Console.WriteLine("\nНайденное блюдо:");
             dish.DisplayInfo();
         }
-
         private void FindDishesByCategory()
         {
             if (_menu.Count == 0)
@@ -921,12 +774,9 @@ class Pr4
                 Console.WriteLine("Меню пусто!");
                 return;
             }
-
             Console.WriteLine("Выберите категорию для поиска:");
             foreach (var category in Enum.GetValues<DishCategory>())
-            {
                 Console.WriteLine($"{(int)category} - {GetCategoryRussianName(category)}");
-            }
 
             int categoryId = InputInt("Введите номер категории: ");
             if (!Enum.IsDefined(typeof(DishCategory), categoryId))
@@ -934,153 +784,91 @@ class Pr4
                 Console.WriteLine("Неверный номер категории!");
                 return;
             }
-
             var selectedCategory = (DishCategory)categoryId;
             var dishesInCategory = _menu.Where(d => d.Category == selectedCategory).ToList();
-
             if (dishesInCategory.Count == 0)
             {
                 Console.WriteLine($"В категории \"{GetCategoryRussianName(selectedCategory)}\" нет блюд.");
                 return;
             }
-
             Console.WriteLine($"\n  БЛЮДА В КАТЕГОРИИ: {GetCategoryRussianName(selectedCategory).ToUpper()}  ");
             foreach (var dish in dishesInCategory)
-            {
                 dish.DisplayInfo();
-            }
-        }
-
-        public List<Dish> GetMenu()
-        {
-            return _menu;
         }
     }
 
-    class OrderManager
+    class MainManager
     {
         private List<Dish> menu;
         private List<Order> orders;
         private DishManager dishManager;
-        private ShowOrderManagementMenu showOrderManagementMenu;
+        private OrderMenu showOrderManagementMenu;
 
-        public OrderManager(List<Dish> initialMenu)
+        public MainManager(List<Dish> initialMenu)
         {
             menu = initialMenu;
             orders = new List<Order>();
             dishManager = new DishManager(menu);
-            showOrderManagementMenu = new ShowOrderManagementMenu(menu);
+            showOrderManagementMenu = new OrderMenu(menu);
         }
 
         public double CalculateTotalClosedOrdersRevenue()
         {
-            double totalRevenue = orders
-                .Where(order => order.IsClosed)
-                .Sum(order => order.TotalCost);
-
+            double totalRevenue = orders.Where(order => order.IsClosed).Sum(order => order.TotalCost);
             Console.WriteLine($"\n  ОБЩАЯ ВЫРУЧКА ПО ЗАКРЫТЫМ ЗАКАЗАМ  ");
             Console.WriteLine($"Количество закрытых заказов: {orders.Count(o => o.IsClosed)}");
             Console.WriteLine($"Общая выручка: {totalRevenue:F2}р");
-
             return totalRevenue;
         }
-
         public void CalculateWaiterClosedOrders(int waiterId)
         {
-            var waiterOrders = orders
-                .Where(order => order.IsClosed && order.Waiter == waiterId)
-                .ToList();
-
+            var waiterOrders = orders.Where(order => order.IsClosed && order.Waiter == waiterId).ToList();
             int orderCount = waiterOrders.Count;
             double totalRevenue = waiterOrders.Sum(order => order.TotalCost);
-
             Console.WriteLine($"\n  СТАТИСТИКА ОФИЦИАНТА #{waiterId}  ");
             Console.WriteLine($"Количество закрытых заказов: {orderCount}");
             Console.WriteLine($"Общая выручка: {totalRevenue:F2}р");
-
             if (orderCount > 0)
             {
                 Console.WriteLine("\nДетализация заказов:");
                 foreach (var order in waiterOrders)
-                {
                     Console.WriteLine($"Заказ #{order.Id} - {order.TotalCost:F2}р ({order.OrderAcceptanceTime:dd.MM.yyyy})");
-                }
-
                 double averageOrder = totalRevenue / orderCount;
                 Console.WriteLine($"Средний чек: {averageOrder:F2}р");
             }
         }
-
         public void CalculateDishStatistics()
         {
             var dishStats = new Dictionary<string, (int Quantity, double Revenue)>();
-
             foreach (var order in orders.Where(o => o.IsClosed))
-            {
                 foreach (var (dish, quantity) in order.DishDictionary)
                 {
                     string dishName = dish.Name;
                     double dishRevenue = dish.Price * quantity;
-
-                    if (dishStats.ContainsKey(dishName))
-                    {
-                        dishStats[dishName] = (
-                            dishStats[dishName].Quantity + quantity,
-                            dishStats[dishName].Revenue + dishRevenue
-                        );
-                    }
-                    else
-                    {
-                        dishStats[dishName] = (quantity, dishRevenue);
-                    }
+                    if (dishStats.TryGetValue(dishName, out (int Quantity, double Revenue) value))
+                        dishStats[dishName] = (value.Quantity + quantity, value.Revenue + dishRevenue);
+                    else dishStats[dishName] = (quantity, dishRevenue);
                 }
-            }
-
             Console.WriteLine($"\n  СТАТИСТИКА ПО БЛЮДАМ  ");
             Console.WriteLine($"Всего закрытых заказов: {orders.Count(o => o.IsClosed)}");
-
             if (dishStats.Count == 0)
             {
                 Console.WriteLine("Нет данных о заказанных блюдах.");
                 return;
             }
-
             var sortedStats = dishStats.OrderByDescending(x => x.Value.Quantity).ToList();
-
             Console.WriteLine("\nТоп блюд по количеству заказов:");
             Console.WriteLine("#        Блюдо               Количество             Выручка");
-
             for (int i = 0; i < Math.Min(10, sortedStats.Count); i++)
             {
                 var (dishName, (quantity, revenue)) = sortedStats[i];
                 string truncatedName = dishName.Length > 20 ? dishName.Substring(0, 17) + "..." : dishName.PadRight(20);
                 Console.WriteLine($"{i + 1,-3}      {truncatedName}     {quantity,-8}       {revenue,9:F2}р");
             }
-
             Console.WriteLine($"\nОбщее количество проданных блюд: {sortedStats.Sum(x => x.Value.Quantity)}");
             Console.WriteLine($"Общая выручка от блюд: {sortedStats.Sum(x => x.Value.Revenue):F2}р");
-
             var mostPopular = sortedStats.First();
             Console.WriteLine($"Самое популярное блюдо: \"{mostPopular.Key}\" ({mostPopular.Value.Quantity} заказов)");
-        }
-
-        public void CalculatePeriodStatistics(DateTime startDate, DateTime endDate)
-        {
-            var periodOrders = orders
-                .Where(order => order.IsClosed &&
-                               order.OrderClosingTime >= startDate &&
-                               order.OrderClosingTime <= endDate)
-                .ToList();
-
-            Console.WriteLine($"\n  СТАТИСТИКА ЗА ПЕРИОД  ");
-            Console.WriteLine($"С {startDate:dd.MM.yyyy} по {endDate:dd.MM.yyyy}");
-            Console.WriteLine($"Количество заказов: {periodOrders.Count}");
-            Console.WriteLine($"Общая выручка: {periodOrders.Sum(o => o.TotalCost):F2}р");
-
-            if (periodOrders.Count > 0)
-            {
-                Console.WriteLine($"Средний чек: {periodOrders.Average(o => o.TotalCost):F2}р");
-            }
         }
 
         public void ShowMainMenu()
@@ -1093,9 +881,7 @@ class Pr4
                 Console.WriteLine("3. Просмотр меню");
                 Console.WriteLine("4. Статистика и отчеты");
                 Console.WriteLine("0. Выход");
-
                 int choice = InputInt("Выберите действие: ");
-
                 switch (choice)
                 {
                     case 1:
@@ -1118,7 +904,6 @@ class Pr4
                 }
             }
         }
-
         private void ShowStatisticsMenu()
         {
             while (true)
@@ -1129,9 +914,7 @@ class Pr4
                 Console.WriteLine("3. Статистика по блюдам");
                 Console.WriteLine("4. Общая сводка");
                 Console.WriteLine("0. Назад");
-
                 int choice = InputInt("Выберите отчет: ");
-
                 switch (choice)
                 {
                     case 1:
@@ -1155,35 +938,26 @@ class Pr4
                 }
             }
         }
-
         private void ShowGeneralSummary()
         {
             Console.WriteLine($"\nОБЩАЯ СВОДКА");
             Console.WriteLine($"Всего заказов: {orders.Count}");
             Console.WriteLine($"Открытых заказов: {orders.Count(o => !o.IsClosed)}");
             Console.WriteLine($"Закрытых заказов: {orders.Count(o => o.IsClosed)}");
-
             if (orders.Count(o => o.IsClosed) > 0)
             {
                 CalculateTotalClosedOrdersRevenue();
                 Console.WriteLine();
                 CalculateDishStatistics();
             }
-
-            var waiterStats = orders
-                .Where(o => o.IsClosed)
-                .GroupBy(o => o.Waiter)
+            var waiterStats = orders.Where(o => o.IsClosed).GroupBy(o => o.Waiter)
                 .Select(g => new { WaiterId = g.Key, OrderCount = g.Count(), Revenue = g.Sum(o => o.TotalCost) })
-                .OrderByDescending(w => w.Revenue)
-                .ToList();
-
+                .OrderByDescending(w => w.Revenue).ToList();
             if (waiterStats.Count > 0)
             {
                 Console.WriteLine($"\nТОП ОФИЦИАНТОВ");
                 foreach (var waiter in waiterStats)
-                {
                     Console.WriteLine($"Официант #{waiter.WaiterId}: {waiter.OrderCount} заказов, {waiter.Revenue:F2}р");
-                }
             }
         }
     }
@@ -1208,8 +982,7 @@ class Pr4
         Dish d16 = new("Мохито", "Лайм, Мята, Содовая, Лед, Сахарный сироп", "400", 220.50, DishCategory.Drinks, 3, ["Освежающее", "Алкогольное"]);
         List<Dish> dishList = [d1, d2, d3, d4, d5, d6, d7, d8, d9, d10, d11, d12, d13, d14, d15, d16];
 
-        OrderManager orderManager = new(dishList);
+        MainManager orderManager = new(dishList);
         orderManager.ShowMainMenu();
     }
 }
-
