@@ -70,12 +70,6 @@ class Pr5
             return FreeVolume >= product.VolumePerUnit;
         }
 
-        internal bool CanAcceptProducts(IEnumerable<Product> products)
-        {
-            var totalVolume = products?.Sum(p => p.VolumePerUnit) ?? 0;
-            return totalVolume <= FreeVolume;
-        }
-
         internal bool AddProduct(Product product)
         {
             if (!CanAcceptProduct(product))
@@ -99,12 +93,6 @@ class Pr5
         internal bool RemoveProduct(Product product)
         {
             return _products.Remove(product);
-        }
-
-        internal bool RemoveProduct(int productId)
-        {
-            var product = _products.FirstOrDefault(p => p.Id == productId);
-            return product != null && RemoveProduct(product);
         }
 
         internal void ClearProducts()
@@ -366,9 +354,9 @@ class Pr5
                 return success;
             }
 
-            List<Product> productsToMoveFromCurrent = new();
-            List<Warehouse> suitableWarehouses = new();
-            List<Product> suitableProducts = new();
+            List<Product> productsToMoveFromCurrent = [];
+            List<Warehouse> suitableWarehouses = [];
+            List<Product> suitableProducts = [];
 
             switch (warehouse.Type)
             {
@@ -396,7 +384,7 @@ class Pr5
                     return false;
             }
 
-            if (!suitableWarehouses.Any() && suitableProducts.Any())
+            if (suitableWarehouses.Count == 0 && suitableProducts.Count != 0)
             {
                 AddLog(warehouse.Type.ToString(), $"Склад {warehouse.Id} ({warehouse.Type})",
                       "Нет подходящих складов для оптимизации", suitableProducts.Sum(p => p.VolumePerUnit));
@@ -509,7 +497,7 @@ class Pr5
                 foreach (var product in expiredProducts)
                 {
                     var recyclingWarehouse = FindSuitableWarehouses(WarehouseType.Recycling,
-                        new List<Product> { product }).FirstOrDefault();
+                        [product]).FirstOrDefault();
 
                     if (recyclingWarehouse != null && warehouse.RemoveProduct(product))
                     {
@@ -557,7 +545,6 @@ class Pr5
         public required string From { get; set; }
         public required string To { get; set; }
         public double Volume { get; set; }
-
         public override string ToString()
         {
             string shortenedProductName = ProductName.Length > 20 ?
@@ -577,9 +564,796 @@ class Pr5
         }
     }
 
+    class WarehouseConsoleMenu
+    {
+        private readonly LogisticsManager _logisticsManager;
+
+        public WarehouseConsoleMenu()
+        {
+            _logisticsManager = new LogisticsManager();
+            InitializeSampleData();
+        }
+
+        private void InitializeSampleData()
+        {
+            _logisticsManager.AddWarehouse(new Warehouse(WarehouseType.Cold, 500, "Холодильная, 1"));
+            _logisticsManager.AddWarehouse(new Warehouse(WarehouseType.Sorting, 800, "Сортировочная, 2"));
+            _logisticsManager.AddWarehouse(new Warehouse(WarehouseType.Shared, 1200, "Основная, 3"));
+            _logisticsManager.AddWarehouse(new Warehouse(WarehouseType.Recycling, 300, "Утилизационная, 4"));
+        }
+
+        public void ShowMainMenu()
+        {
+            while (true)
+            {
+                try
+                {
+                    Console.WriteLine("\n=== СИСТЕМА УПРАВЛЕНИЯ СКЛАДАМИ ===");
+                    Console.WriteLine("1. Управление складами");
+                    Console.WriteLine("2. Управление товарами");
+                    Console.WriteLine("3. Логистические операции");
+                    Console.WriteLine("4. Отчеты и аналитика");
+                    Console.WriteLine("5. Просмотр логов");
+                    Console.WriteLine("0. Выход");
+
+                    Console.Write("Выберите действие: ");
+                    int choice = Convert.ToInt32(Console.ReadLine());
+
+                    switch (choice)
+                    {
+                        case 1:
+                            ShowWarehouseMenu();
+                            break;
+                        case 2:
+                            ShowProductMenu();
+                            break;
+                        case 3:
+                            ShowLogisticsMenu();
+                            break;
+                        case 4:
+                            ShowReportsMenu();
+                            break;
+                        case 5:
+                            ShowAllLogs();
+                            break;
+                        case 0:
+                            Console.WriteLine("Выход из программы");
+                            return;
+                        default:
+                            Console.WriteLine("Неверный выбор!");
+                            break;
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"Ошибка: {ex.Message}");
+                }
+            }
+        }
+
+        private void ShowWarehouseMenu()
+        {
+            while (true)
+            {
+                Console.WriteLine("\n--- УПРАВЛЕНИЕ СКЛАДАМИ ---");
+                Console.WriteLine("1. Создать склад");
+                Console.WriteLine("2. Редактировать склад");
+                Console.WriteLine("3. Информация о складе");
+                Console.WriteLine("4. Список всех складов");
+                Console.WriteLine("5. Удалить товары со склада");
+                Console.WriteLine("0. Назад");
+
+                Console.Write("Выберите действие: ");
+                int choice = Convert.ToInt32(Console.ReadLine());
+
+                try
+                {
+                    switch (choice)
+                    {
+                        case 1:
+                            CreateWarehouse();
+                            break;
+                        case 2:
+                            EditWarehouse();
+                            break;
+                        case 3:
+                            ShowWarehouseInfo();
+                            break;
+                        case 4:
+                            ListAllWarehouses();
+                            break;
+                        case 5:
+                            ClearWarehouseProducts();
+                            break;
+                        case 0:
+                            return;
+                        default:
+                            Console.WriteLine("Неверный выбор!");
+                            break;
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"Ошибка: {ex.Message}");
+                }
+            }
+        }
+
+        private void ShowProductMenu()
+        {
+            while (true)
+            {
+                Console.WriteLine("\n--- УПРАВЛЕНИЕ ТОВАРАМИ ---");
+                Console.WriteLine("1. Создать товар");
+                Console.WriteLine("2. Редактировать товар");
+                Console.WriteLine("3. Информация о товаре");
+                Console.WriteLine("4. Найти товар по ID");
+                Console.WriteLine("5. Список просроченных товаров");
+                Console.WriteLine("0. Назад");
+
+                Console.Write("Выберите действие: ");
+                int choice = Convert.ToInt32(Console.ReadLine());
+
+                try
+                {
+                    switch (choice)
+                    {
+                        case 1:
+                            CreateProduct();
+                            break;
+                        case 2:
+                            EditProduct();
+                            break;
+                        case 3:
+                            ShowProductInfo();
+                            break;
+                        case 4:
+                            FindProductById();
+                            break;
+                        case 5:
+                            ShowExpiredProducts();
+                            break;
+                        case 0:
+                            return;
+                        default:
+                            Console.WriteLine("Неверный выбор!");
+                            break;
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"Ошибка: {ex.Message}");
+                }
+            }
+        }
+
+        private void ShowLogisticsMenu()
+        {
+            while (true)
+            {
+                Console.WriteLine("\n--- ЛОГИСТИЧЕСКИЕ ОПЕРАЦИИ ---");
+                Console.WriteLine("1. Обработать поставку");
+                Console.WriteLine("2. Оптимизировать склад");
+                Console.WriteLine("3. Оптимизировать все склады");
+                Console.WriteLine("4. Переместить товар между складами");
+                Console.WriteLine("5. Переместить просроченные товары в утилизацию");
+                Console.WriteLine("0. Назад");
+
+                Console.Write("Выберите действие: ");
+                int choice = Convert.ToInt32(Console.ReadLine());
+
+                try
+                {
+                    switch (choice)
+                    {
+                        case 1:
+                            ProcessDelivery();
+                            break;
+                        case 2:
+                            OptimizeWarehouse();
+                            break;
+                        case 3:
+                            OptimizeAllWarehouses();
+                            break;
+                        case 4:
+                            MoveProductBetweenWarehouses();
+                            break;
+                        case 5:
+                            MoveExpiredToRecycling();
+                            break;
+                        case 0:
+                            return;
+                        default:
+                            Console.WriteLine("Неверный выбор!");
+                            break;
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"Ошибка: {ex.Message}");
+                }
+            }
+        }
+
+        private void ShowReportsMenu()
+        {
+            while (true)
+            {
+                Console.WriteLine("\n--- ОТЧЕТЫ И АНАЛИТИКА ---");
+                Console.WriteLine("1. Анализ склада");
+                Console.WriteLine("2. Анализ всех складов");
+                Console.WriteLine("3. Общая статистика");
+                Console.WriteLine("4. Финансовый отчет");
+                Console.WriteLine("5. Товары по поставщику");
+                Console.WriteLine("0. Назад");
+
+                Console.Write("Выберите действие: ");
+                int choice = Convert.ToInt32(Console.ReadLine());
+
+                try
+                {
+                    switch (choice)
+                    {
+                        case 1:
+                            AnalyzeWarehouse();
+                            break;
+                        case 2:
+                            AnalyzeAllWarehouses();
+                            break;
+                        case 3:
+                            ShowGeneralStatistics();
+                            break;
+                        case 4:
+                            ShowFinancialReport();
+                            break;
+                        case 5:
+                            ShowProductsBySupplier();
+                            break;
+                        case 0:
+                            return;
+                        default:
+                            Console.WriteLine("Неверный выбор!");
+                            break;
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"Ошибка: {ex.Message}");
+                }
+            }
+        }
+
+        private void CreateWarehouse()
+        {
+            Console.WriteLine("Типы складов: 1-Холодильный, 2-Сортировочный, 3-Общий, 4-Утилизация");
+            Console.Write("Выберите тип склада: ");
+            int typeChoice = Convert.ToInt32(Console.ReadLine());
+
+            WarehouseType type = typeChoice switch
+            {
+                1 => WarehouseType.Cold,
+                2 => WarehouseType.Sorting,
+                3 => WarehouseType.Shared,
+                4 => WarehouseType.Recycling,
+                _ => throw new ArgumentException("Неверный тип склада")
+            };
+
+            Console.Write("Введите объем склада: ");
+            double volume = Convert.ToDouble(Console.ReadLine());
+
+            Console.Write("Введите адрес склада: ");
+            string address = Console.ReadLine()!;
+
+            var warehouse = new Warehouse(type, volume, address);
+            _logisticsManager.AddWarehouse(warehouse);
+            Console.WriteLine($"Склад создан с ID: {warehouse.Id}");
+        }
+
+        private void EditWarehouse()
+        {
+            Console.Write("Введите ID склада: ");
+            int id = Convert.ToInt32(Console.ReadLine());
+
+            var warehouse = _logisticsManager.GetWarehouses().FirstOrDefault(w => w.Id == id);
+            if (warehouse == null)
+            {
+                Console.WriteLine("Склад не найден");
+                return;
+            }
+
+            Console.WriteLine("Типы складов: 1-Холодильный, 2-Сортировочный, 3-Общий, 4-Утилизация");
+            Console.Write("Введите новый тип склада (или Enter для пропуска): ");
+            string typeInput = Console.ReadLine()!;
+            WarehouseType? newType = null;
+            if (!string.IsNullOrEmpty(typeInput))
+            {
+                int typeChoice = Convert.ToInt32(typeInput);
+                newType = typeChoice switch
+                {
+                    1 => WarehouseType.Cold,
+                    2 => WarehouseType.Sorting,
+                    3 => WarehouseType.Shared,
+                    4 => WarehouseType.Recycling,
+                    _ => throw new ArgumentException("Неверный тип склада")
+                };
+            }
+
+            Console.Write("Введите новый объем (или Enter для пропуска): ");
+            string volumeInput = Console.ReadLine()!;
+            double? newVolume = null;
+            if (!string.IsNullOrEmpty(volumeInput))
+            {
+                newVolume = Convert.ToDouble(volumeInput);
+            }
+
+            Console.Write("Введите новый адрес (или Enter для пропуска): ");
+            string newAddress = Console.ReadLine()!;
+
+            warehouse.Edit(newType, newVolume, newAddress);
+            Console.WriteLine("Склад успешно отредактирован");
+        }
+
+        private void ShowWarehouseInfo()
+        {
+            Console.Write("Введите ID склада: ");
+            int id = Convert.ToInt32(Console.ReadLine());
+
+            var warehouse = _logisticsManager.GetWarehouses().FirstOrDefault(w => w.Id == id);
+            if (warehouse == null)
+            {
+                Console.WriteLine("Склад не найден");
+                return;
+            }
+
+            Console.WriteLine(warehouse.GetInformation());
+
+            if (warehouse.ProductsCount > 0)
+            {
+                Console.WriteLine("\nТовары на складе:");
+                foreach (var product in warehouse.Products)
+                {
+                    Console.WriteLine($"- {product.Name} (ID: {product.Id}, Объем: {product.VolumePerUnit:F2})");
+                }
+            }
+        }
+
+        private void ListAllWarehouses()
+        {
+            var warehouses = _logisticsManager.GetWarehouses();
+            if (!warehouses.Any())
+            {
+                Console.WriteLine("Нет созданных складов");
+                return;
+            }
+
+            foreach (var warehouse in warehouses)
+            {
+                Console.WriteLine(warehouse.GetInformation());
+                Console.WriteLine("---");
+            }
+        }
+
+        private void ClearWarehouseProducts()
+        {
+            Console.Write("Введите ID склада: ");
+            int id = Convert.ToInt32(Console.ReadLine());
+
+            var warehouse = _logisticsManager.GetWarehouses().FirstOrDefault(w => w.Id == id);
+            if (warehouse == null)
+            {
+                Console.WriteLine("Склад не найден");
+                return;
+            }
+
+            warehouse.ClearProducts();
+            Console.WriteLine("Все товары удалены со склада");
+        }
+
+        private void CreateProduct()
+        {
+            Console.Write("Введите ID поставщика: ");
+            int supplierId = Convert.ToInt32(Console.ReadLine());
+
+            Console.Write("Введите название товара: ");
+            string name = Console.ReadLine()!;
+
+            Console.Write("Введите объем единицы товара: ");
+            double volume = Convert.ToDouble(Console.ReadLine());
+
+            Console.Write("Введите цену единицы товара: ");
+            decimal price = Convert.ToDecimal(Console.ReadLine());
+
+            Console.Write("Введите срок годности (в днях): ");
+            int expiration = Convert.ToInt32(Console.ReadLine());
+
+            var product = new Product(supplierId, name, volume, price, expiration);
+            Console.WriteLine($"Товар создан с ID: {product.Id}");
+
+            Console.Write("Добавить товар на склад? (д/н): ");
+            if (Console.ReadLine()!.ToLower() == "д")
+            {
+                AddProductToWarehouse(product);
+            }
+        }
+
+        private void EditProduct()
+        {
+            Console.Write("Введите ID товара: ");
+            int id = Convert.ToInt32(Console.ReadLine());
+
+            var product = FindProductInAnyWarehouse(id);
+            if (product == null)
+            {
+                Console.WriteLine("Товар не найден");
+                return;
+            }
+
+            Console.Write("Введите новый ID поставщика (или Enter для пропуска): ");
+            string supplierInput = Console.ReadLine()!;
+            int? newSupplierId = null;
+            if (!string.IsNullOrEmpty(supplierInput))
+            {
+                newSupplierId = Convert.ToInt32(supplierInput);
+            }
+
+            Console.Write("Введите новое название (или Enter для пропуска): ");
+            string newName = Console.ReadLine()!;
+
+            Console.Write("Введите новый объем (или Enter для пропуска): ");
+            string volumeInput = Console.ReadLine()!;
+            double? newVolume = null;
+            if (!string.IsNullOrEmpty(volumeInput))
+            {
+                newVolume = Convert.ToDouble(volumeInput);
+            }
+
+            Console.Write("Введите новую цену (или Enter для пропуска): ");
+            string priceInput = Console.ReadLine()!;
+            decimal? newPrice = null;
+            if (!string.IsNullOrEmpty(priceInput))
+            {
+                newPrice = Convert.ToDecimal(priceInput);
+            }
+
+            Console.Write("Введите новый срок годности (или Enter для пропуска): ");
+            string expirationInput = Console.ReadLine()!;
+            int? newExpiration = null;
+            if (!string.IsNullOrEmpty(expirationInput))
+            {
+                newExpiration = Convert.ToInt32(expirationInput);
+            }
+
+            product.Edit(newSupplierId, newName, newVolume, newPrice, newExpiration);
+            Console.WriteLine("Товар успешно отредактирован");
+        }
+
+        private void ShowProductInfo()
+        {
+            Console.Write("Введите ID товара: ");
+            int id = Convert.ToInt32(Console.ReadLine());
+
+            var product = FindProductInAnyWarehouse(id);
+            if (product == null)
+            {
+                Console.WriteLine("Товар не найден");
+                return;
+            }
+
+            Console.WriteLine(product.GetInformation());
+
+            var warehouse = FindWarehouseWithProduct(id);
+            if (warehouse != null)
+            {
+                Console.WriteLine($"Находится на складе: {warehouse.Id} ({warehouse.Type}) - {warehouse.Address}");
+            }
+        }
+
+        private void FindProductById()
+        {
+            Console.Write("Введите ID товара: ");
+            int id = Convert.ToInt32(Console.ReadLine());
+
+            var product = FindProductInAnyWarehouse(id);
+            if (product == null)
+            {
+                Console.WriteLine("Товар не найден");
+                return;
+            }
+
+            Console.WriteLine(product.GetInformation());
+        }
+
+        private void ShowExpiredProducts()
+        {
+            var expiredProducts = new List<(Product product, Warehouse warehouse)>();
+
+            foreach (var warehouse in _logisticsManager.GetWarehouses())
+            {
+                foreach (var product in warehouse.GetExpiredProducts())
+                {
+                    expiredProducts.Add((product, warehouse));
+                }
+            }
+
+            if (!expiredProducts.Any())
+            {
+                Console.WriteLine("Просроченных товаров не найдено");
+                return;
+            }
+
+            Console.WriteLine("Просроченные товары:");
+            foreach (var (product, warehouse) in expiredProducts)
+            {
+                Console.WriteLine($"- {product.Name} (ID: {product.Id}) на складе {warehouse.Id} ({warehouse.Type})");
+            }
+        }
+
+        private void ProcessDelivery()
+        {
+            var delivery = new List<Product>();
+
+            Console.WriteLine("Добавление товаров в поставку (для завершения введите пустую строку):");
+
+            while (true)
+            {
+                try
+                {
+                    Console.Write("Введите название товара (или Enter для завершения): ");
+                    string name = Console.ReadLine()!;
+                    if (string.IsNullOrEmpty(name)) break;
+
+                    Console.Write("ID поставщика: ");
+                    int supplierId = Convert.ToInt32(Console.ReadLine());
+
+                    Console.Write("Объем единицы: ");
+                    double volume = Convert.ToDouble(Console.ReadLine());
+
+                    Console.Write("Цена единицы: ");
+                    decimal price = Convert.ToDecimal(Console.ReadLine());
+
+                    Console.Write("Срок годности (дней): ");
+                    int expiration = Convert.ToInt32(Console.ReadLine());
+
+                    var product = new Product(supplierId, name, volume, price, expiration);
+                    delivery.Add(product);
+                    Console.WriteLine($"Товар добавлен в поставку (ID: {product.Id})");
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"Ошибка ввода: {ex.Message}");
+                }
+            }
+
+            if (!delivery.Any())
+            {
+                Console.WriteLine("Поставка пуста");
+                return;
+            }
+
+            bool result = _logisticsManager.ProcessTheDelivery(delivery);
+            Console.WriteLine($"Результат обработки поставки: {(result ? "УСПЕХ" : "НЕУДАЧА")}");
+        }
+
+        private void OptimizeWarehouse()
+        {
+            Console.Write("Введите ID склада для оптимизации: ");
+            int id = Convert.ToInt32(Console.ReadLine());
+
+            var warehouse = _logisticsManager.GetWarehouses().FirstOrDefault(w => w.Id == id);
+            if (warehouse == null)
+            {
+                Console.WriteLine("Склад не найден");
+                return;
+            }
+
+            bool result = _logisticsManager.OptimizeWarehouse(warehouse);
+            Console.WriteLine($"Результат оптимизации: {(result ? "УСПЕХ" : "ЕСТЬ ПРОБЛЕМЫ")}");
+        }
+
+        private void OptimizeAllWarehouses()
+        {
+            bool result = _logisticsManager.OptimizeAllWarehouses();
+            Console.WriteLine($"Результат оптимизации всех складов: {(result ? "УСПЕХ" : "ЕСТЬ ПРОБЛЕМЫ")}");
+        }
+
+        private void MoveProductBetweenWarehouses()
+        {
+            Console.Write("Введите ID товара: ");
+            int productId = Convert.ToInt32(Console.ReadLine());
+
+            var product = FindProductInAnyWarehouse(productId);
+            if (product == null)
+            {
+                Console.WriteLine("Товар не найден");
+                return;
+            }
+
+            var fromWarehouse = FindWarehouseWithProduct(productId);
+            if (fromWarehouse == null)
+            {
+                Console.WriteLine("Не удалось определить текущий склад товара");
+                return;
+            }
+
+            Console.Write("Введите ID целевого склада: ");
+            int toWarehouseId = Convert.ToInt32(Console.ReadLine());
+
+            var toWarehouse = _logisticsManager.GetWarehouses().FirstOrDefault(w => w.Id == toWarehouseId);
+            if (toWarehouse == null)
+            {
+                Console.WriteLine("Целевой склад не найден");
+                return;
+            }
+
+            if (fromWarehouse.RemoveProduct(product) && toWarehouse.AddProduct(product))
+            {
+                _logisticsManager.AddLog(product.Name, $"Склад {fromWarehouse.Id}", $"Склад {toWarehouse.Id}", product.VolumePerUnit);
+                Console.WriteLine("Товар успешно перемещен");
+            }
+            else
+            {
+                Console.WriteLine("Не удалось переместить товар");
+                fromWarehouse.AddProduct(product);
+            }
+        }
+
+        private void MoveExpiredToRecycling()
+        {
+            _logisticsManager.MoveExpiredProductsToRecycling();
+            Console.WriteLine("Перемещение просроченных товаров завершено");
+        }
+
+        private void AnalyzeWarehouse()
+        {
+            Console.Write("Введите ID склада: ");
+            int id = Convert.ToInt32(Console.ReadLine());
+
+            var warehouse = _logisticsManager.GetWarehouses().FirstOrDefault(w => w.Id == id);
+            if (warehouse == null)
+            {
+                Console.WriteLine("Склад не найден");
+                return;
+            }
+
+            string analysis = _logisticsManager.AnalyzeWarehouse(warehouse);
+            Console.WriteLine(analysis);
+        }
+
+        private void AnalyzeAllWarehouses()
+        {
+            foreach (var warehouse in _logisticsManager.GetWarehouses())
+            {
+                string analysis = _logisticsManager.AnalyzeWarehouse(warehouse);
+                Console.WriteLine(analysis);
+                Console.WriteLine("---");
+            }
+        }
+
+        private void ShowGeneralStatistics()
+        {
+            var warehouses = _logisticsManager.GetWarehouses();
+
+            Console.WriteLine("\n=== ОБЩАЯ СТАТИСТИКА ===");
+            Console.WriteLine($"Всего складов: {warehouses.Count}");
+            Console.WriteLine($"Всего товаров: {warehouses.Sum(w => w.ProductsCount)}");
+            Console.WriteLine($"Общий объем: {warehouses.Sum(w => w.Volume):F2}");
+            Console.WriteLine($"Занятый объем: {warehouses.Sum(w => w.OccupiedVolume):F2}");
+            Console.WriteLine($"Свободный объем: {warehouses.Sum(w => w.FreeVolume):F2}");
+            Console.WriteLine($"Загрузка: {warehouses.Sum(w => w.OccupiedVolume) / warehouses.Sum(w => w.Volume) * 100:F1}%");
+
+            Console.WriteLine("\nПо типам складов:");
+            foreach (WarehouseType type in Enum.GetValues<WarehouseType>())
+            {
+                var typeWarehouses = warehouses.Where(w => w.Type == type).ToList();
+                if (typeWarehouses.Any())
+                {
+                    Console.WriteLine($"  {type}: {typeWarehouses.Count} складов, {typeWarehouses.Sum(w => w.ProductsCount)} товаров");
+                }
+            }
+        }
+
+        private void ShowFinancialReport()
+        {
+            var warehouses = _logisticsManager.GetWarehouses();
+
+            Console.WriteLine("\n=== ФИНАНСОВЫЙ ОТЧЕТ ===");
+            decimal totalValue = 0;
+
+            foreach (var warehouse in warehouses.Where(w => w.ProductsCount > 0))
+            {
+                decimal value = warehouse.CalculateTotalProductsValue();
+                totalValue += value;
+                Console.WriteLine($"Склад {warehouse.Id} ({warehouse.Type}): {value:C2}");
+            }
+
+            Console.WriteLine($"\nОбщая стоимость товаров: {totalValue:C2}");
+        }
+
+        private void ShowProductsBySupplier()
+        {
+            Console.Write("Введите ID поставщика: ");
+            int supplierId = Convert.ToInt32(Console.ReadLine());
+
+            var supplierProducts = new List<(Product product, Warehouse warehouse)>();
+
+            foreach (var warehouse in _logisticsManager.GetWarehouses())
+            {
+                foreach (var product in warehouse.GetProductsBySupplier(supplierId))
+                {
+                    supplierProducts.Add((product, warehouse));
+                }
+            }
+
+            if (!supplierProducts.Any())
+            {
+                Console.WriteLine("Товары данного поставщика не найдены");
+                return;
+            }
+
+            Console.WriteLine($"Товары поставщика {supplierId}:");
+            foreach (var (product, warehouse) in supplierProducts)
+            {
+                Console.WriteLine($"- {product.Name} (ID: {product.Id}) - {product.PricePerUnit:C2} на складе {warehouse.Id}");
+            }
+        }
+
+        private void ShowAllLogs()
+        {
+            var logs = _logisticsManager.GetLogs();
+            if (!logs.Any())
+            {
+                Console.WriteLine("Логи пусты");
+                return;
+            }
+
+            Console.WriteLine("Все логи операций:");
+            foreach (var log in logs)
+            {
+                Console.WriteLine(log.ToString());
+            }
+        }
+
+        private Product? FindProductInAnyWarehouse(int productId)
+        {
+            return _logisticsManager.GetWarehouses()
+                .SelectMany(w => w.Products)
+                .FirstOrDefault(p => p.Id == productId);
+        }
+
+        private Warehouse? FindWarehouseWithProduct(int productId)
+        {
+            return _logisticsManager.GetWarehouses()
+                .FirstOrDefault(w => w.ContainsProduct(productId));
+        }
+
+        private void AddProductToWarehouse(Product product)
+        {
+            Console.Write("Введите ID склада: ");
+            int warehouseId = Convert.ToInt32(Console.ReadLine());
+
+            var warehouse = _logisticsManager.GetWarehouses().FirstOrDefault(w => w.Id == warehouseId);
+            if (warehouse == null)
+            {
+                Console.WriteLine("Склад не найден");
+                return;
+            }
+
+            if (warehouse.AddProduct(product))
+            {
+                _logisticsManager.AddLog(product.Name, "Создание", $"Склад {warehouse.Id}", product.VolumePerUnit);
+                Console.WriteLine("Товар добавлен на склад");
+            }
+            else
+            {
+                Console.WriteLine("Не удалось добавить товар на склад (недостаточно места)");
+            }
+        }
+    }
+
     public Pr5()
     {
-
+        var menu = new WarehouseConsoleMenu();
+        menu.ShowMainMenu();
     }
 }
 
