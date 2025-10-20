@@ -2,8 +2,8 @@
 {
     private static void Main()
     {
-        int p = 5;
-        int z = 3;
+        int p = 6;
+        int z = 1;
 
         switch (p)
         {
@@ -27,6 +27,9 @@
                 break;
             case 5:
                 _ = new Pr5();
+                break;
+            case 6:
+                _ = new Pr6(z);
                 break;
         }
     }

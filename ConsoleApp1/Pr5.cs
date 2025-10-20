@@ -34,7 +34,6 @@ class Pr5
             Volume = volume;
             Address = address ?? throw new ArgumentNullException(nameof(address));
         }
-
         internal void Edit(WarehouseType? type = null, double? volume = null, string? address = null)
         {
             if (type != null)
@@ -69,7 +68,6 @@ class Pr5
         {
             return FreeVolume >= product.VolumePerUnit;
         }
-
         internal bool AddProduct(Product product)
         {
             if (!CanAcceptProduct(product))
@@ -78,7 +76,6 @@ class Pr5
             _products.Add(product);
             return true;
         }
-
         internal int AddProducts(IEnumerable<Product> products)
         {
             var addedCount = 0;
@@ -90,35 +87,12 @@ class Pr5
             return addedCount;
         }
 
-        internal bool RemoveProduct(Product product)
-        {
-            return _products.Remove(product);
-        }
-
-        internal void ClearProducts()
-        {
-            _products.Clear();
-        }
-
-        internal bool ContainsProduct(int productId)
-        {
-            return _products.Any(p => p.Id == productId);
-        }
-
-        internal IEnumerable<Product> GetExpiredProducts()
-        {
-            return _products.Where(p => p.IsExpired);
-        }
-
-        internal IEnumerable<Product> GetProductsBySupplier(int supplierId)
-        {
-            return _products.Where(p => p.SupplierId == supplierId);
-        }
-
-        internal decimal CalculateTotalProductsValue()
-        {
-            return _products.Sum(p => p.PricePerUnit);
-        }
+        internal bool RemoveProduct(Product product) => _products.Remove(product);
+        internal void ClearProducts() => _products.Clear();
+        internal bool ContainsProduct(int productId) => _products.Any(p => p.Id == productId);
+        internal IEnumerable<Product> GetExpiredProducts() => _products.Where(p => p.IsExpired);
+        internal IEnumerable<Product> GetProductsBySupplier(int supplierId) => _products.Where(p => p.SupplierId == supplierId);
+        internal decimal CalculateTotalProductsValue() => _products.Sum(p => p.PricePerUnit);
     }
 
     class Product
@@ -148,7 +122,6 @@ class Pr5
             PricePerUnit = pricePerUnit;
             ExpirationDateRemaining = expirationDateRemaining;
         }
-
         internal void Edit(int? supplierId = null, string? name = null, double? volumePerUnit = null, decimal? pricePerUnit = null, int? expirationDateRemaining = null)
         {
             if (supplierId.HasValue)
@@ -186,7 +159,6 @@ class Pr5
             Срок годности: {ExpirationDateRemaining} дней
             """;
         }
-
         internal bool IsExpired => ExpirationDateRemaining <= 0;
     }
 
@@ -229,50 +201,35 @@ class Pr5
 
             return DistributeProducts(delivery, suitableWarehouses, "Поставка");
         }
-
-        private List<Warehouse> FindSuitableWarehouses(WarehouseType type, List<Product> delivery)
+        private bool MoveProduct(Product product, Warehouse fromWarehouse, Warehouse toWarehouse)
         {
-            var totalVolume = delivery.Sum(p => p.VolumePerUnit);
-            var warehouses = _warehouses
-                .Where(w => w.Type == type && w.FreeVolume >= totalVolume)
-                .OrderByDescending(w => w.FreeVolume)
-                .ToList();
+            if (product == null || fromWarehouse == null || toWarehouse == null)
+                return false;
 
-            if (warehouses.Count == 0 && type != WarehouseType.Recycling)
+            if (!fromWarehouse.ContainsProduct(product.Id))
             {
-                warehouses = FindWarehouseCombination(type, delivery);
+                AddLog(product.Name, $"Склад {fromWarehouse.Id}", "Ошибка: товар не найден", product.VolumePerUnit);
+                return false;
             }
 
-            return warehouses;
-        }
-
-        private List<Warehouse> FindWarehouseCombination(WarehouseType type, List<Product> delivery)
-        {
-            var result = new List<Warehouse>();
-            var remainingProducts = new List<Product>(delivery);
-            var availableWarehouses = _warehouses
-                .Where(w => w.Type == type && w.FreeVolume > 0)
-                .OrderByDescending(w => w.FreeVolume)
-                .ToList();
-
-            foreach (var warehouse in availableWarehouses)
+            if (!toWarehouse.CanAcceptProduct(product))
             {
-                var productsThatFit = remainingProducts
-                    .Where(p => p.VolumePerUnit <= warehouse.FreeVolume)
-                    .ToList();
-
-                if (productsThatFit.Count != 0)
-                {
-                    result.Add(warehouse);
-                    remainingProducts = remainingProducts.Except(productsThatFit).ToList();
-                }
-
-                if (remainingProducts.Count == 0) break;
+                AddLog(product.Name, $"Склад {fromWarehouse.Id} ({fromWarehouse.Type})",
+                      $"Склад {toWarehouse.Id} ({toWarehouse.Type}) (недостаточно места)", product.VolumePerUnit);
+                return false;
             }
 
-            return remainingProducts.Count != 0 ? [] : result;
+            if (fromWarehouse.RemoveProduct(product) && toWarehouse.AddProduct(product))
+            {
+                return true;
+            }
+            else
+            {
+                fromWarehouse.AddProduct(product);
+                AddLog(product.Name, $"Склад {fromWarehouse.Id} ({fromWarehouse.Type})", "Ошибка перемещения", product.VolumePerUnit);
+                return false;
+            }
         }
-
         private bool DistributeProducts(List<Product> products, List<Warehouse> warehouses, string source)
         {
             bool success = true;
@@ -310,7 +267,69 @@ class Pr5
 
             return success;
         }
+        public void MoveExpiredProductsToRecycling()
+        {
+            foreach (var warehouse in _warehouses.Where(w => w.Type != WarehouseType.Recycling))
+            {
+                var expiredProducts = warehouse.GetExpiredProducts().ToList();
 
+                foreach (var product in expiredProducts)
+                {
+                    var recyclingWarehouse = FindSuitableWarehouses(WarehouseType.Recycling,
+                        [product]).FirstOrDefault();
+
+                    if (recyclingWarehouse != null && warehouse.RemoveProduct(product))
+                    {
+                        recyclingWarehouse.AddProduct(product);
+                        AddLog(product.Name, $"Склад {warehouse.Id} ({warehouse.Type})",
+                              $"Склад {recyclingWarehouse.Id} (Утилизация)", product.VolumePerUnit);
+                    }
+                }
+            }
+        }
+
+        private List<Warehouse> FindSuitableWarehouses(WarehouseType type, List<Product> delivery)
+        {
+            var totalVolume = delivery.Sum(p => p.VolumePerUnit);
+            var warehouses = _warehouses
+                .Where(w => w.Type == type && w.FreeVolume >= totalVolume)
+                .OrderByDescending(w => w.FreeVolume)
+                .ToList();
+
+            if (warehouses.Count == 0 && type != WarehouseType.Recycling)
+            {
+                warehouses = FindWarehouseCombination(type, delivery);
+            }
+
+            return warehouses;
+        }
+        private List<Warehouse> FindWarehouseCombination(WarehouseType type, List<Product> delivery)
+        {
+            var result = new List<Warehouse>();
+            var remainingProducts = new List<Product>(delivery);
+            var availableWarehouses = _warehouses
+                .Where(w => w.Type == type && w.FreeVolume > 0)
+                .OrderByDescending(w => w.FreeVolume)
+                .ToList();
+
+            foreach (var warehouse in availableWarehouses)
+            {
+                var productsThatFit = remainingProducts
+                    .Where(p => p.VolumePerUnit <= warehouse.FreeVolume)
+                    .ToList();
+
+                if (productsThatFit.Count != 0)
+                {
+                    result.Add(warehouse);
+                    remainingProducts = remainingProducts.Except(productsThatFit).ToList();
+                }
+
+                if (remainingProducts.Count == 0) break;
+            }
+
+            return remainingProducts.Count != 0 ? [] : result;
+        }
+          
         public bool OptimizeWarehouse(Warehouse warehouse)
         {
             if (warehouse == null)
@@ -393,37 +412,6 @@ class Pr5
 
             return DistributeProducts(suitableProducts, suitableWarehouses, $"Склад {warehouse.Id} ({warehouse.Type})");
         }
-
-        private bool MoveProduct(Product product, Warehouse fromWarehouse, Warehouse toWarehouse)
-        {
-            if (product == null || fromWarehouse == null || toWarehouse == null)
-                return false;
-
-            if (!fromWarehouse.ContainsProduct(product.Id))
-            {
-                AddLog(product.Name, $"Склад {fromWarehouse.Id}", "Ошибка: товар не найден", product.VolumePerUnit);
-                return false;
-            }
-
-            if (!toWarehouse.CanAcceptProduct(product))
-            {
-                AddLog(product.Name, $"Склад {fromWarehouse.Id} ({fromWarehouse.Type})",
-                      $"Склад {toWarehouse.Id} ({toWarehouse.Type}) (недостаточно места)", product.VolumePerUnit);
-                return false;
-            }
-
-            if (fromWarehouse.RemoveProduct(product) && toWarehouse.AddProduct(product))
-            {
-                return true;
-            }
-            else
-            {
-                fromWarehouse.AddProduct(product);
-                AddLog(product.Name, $"Склад {fromWarehouse.Id} ({fromWarehouse.Type})", "Ошибка перемещения", product.VolumePerUnit);
-                return false;
-            }
-        }
-
         public bool OptimizeAllWarehousesByType(WarehouseType type)
         {
             var warehousesToOptimize = _warehouses.Where(w => w.Type == type).ToList();
@@ -439,7 +427,6 @@ class Pr5
 
             return overallSuccess;
         }
-
         public bool OptimizeAllWarehouses()
         {
             bool overallSuccess = true;
@@ -450,7 +437,6 @@ class Pr5
 
             return overallSuccess;
         }
-
         public string AnalyzeWarehouse(Warehouse warehouse)
         {
             if (warehouse == null) return "Склад не найден";
@@ -487,28 +473,7 @@ class Pr5
 
             return $"Склад {warehouse.Id} ({warehouse.Type}): {string.Join("; ", violations)}";
         }
-
-        public void MoveExpiredProductsToRecycling()
-        {
-            foreach (var warehouse in _warehouses.Where(w => w.Type != WarehouseType.Recycling))
-            {
-                var expiredProducts = warehouse.GetExpiredProducts().ToList();
-
-                foreach (var product in expiredProducts)
-                {
-                    var recyclingWarehouse = FindSuitableWarehouses(WarehouseType.Recycling,
-                        [product]).FirstOrDefault();
-
-                    if (recyclingWarehouse != null && warehouse.RemoveProduct(product))
-                    {
-                        recyclingWarehouse.AddProduct(product);
-                        AddLog(product.Name, $"Склад {warehouse.Id} ({warehouse.Type})",
-                              $"Склад {recyclingWarehouse.Id} (Утилизация)", product.VolumePerUnit);
-                    }
-                }
-            }
-        }
-
+     
         public void AddLog(string productName, string from, string to, double volume)
         {
             var logEntry = new LogEntry
@@ -522,20 +487,9 @@ class Pr5
             _logs.Add(logEntry);
         }
 
-        public IReadOnlyList<Warehouse> GetWarehouses()
-        {
-            return _warehouses.AsReadOnly();
-        }
-
-        public IReadOnlyList<LogEntry> GetLogs()
-        {
-            return _logs.AsReadOnly();
-        }
-
-        public void AddWarehouse(Warehouse warehouse)
-        {
-            _warehouses.Add(warehouse);
-        }
+        public IReadOnlyList<Warehouse> GetWarehouses() => _warehouses.AsReadOnly();
+        public IReadOnlyList<LogEntry> GetLogs() => _logs.AsReadOnly();
+        public void AddWarehouse(Warehouse warehouse) => _warehouses.Add(warehouse);
     }
 
     class LogEntry
@@ -630,7 +584,6 @@ class Pr5
                 }
             }
         }
-
         private void ShowWarehouseMenu()
         {
             while (true)
@@ -678,7 +631,6 @@ class Pr5
                 }
             }
         }
-
         private void ShowProductMenu()
         {
             while (true)
@@ -726,7 +678,6 @@ class Pr5
                 }
             }
         }
-
         private void ShowLogisticsMenu()
         {
             while (true)
@@ -774,7 +725,6 @@ class Pr5
                 }
             }
         }
-
         private void ShowReportsMenu()
         {
             while (true)
@@ -848,7 +798,6 @@ class Pr5
             _logisticsManager.AddWarehouse(warehouse);
             Console.WriteLine($"Склад создан с ID: {warehouse.Id}");
         }
-
         private void EditWarehouse()
         {
             Console.Write("Введите ID склада: ");
@@ -892,7 +841,6 @@ class Pr5
             warehouse.Edit(newType, newVolume, newAddress);
             Console.WriteLine("Склад успешно отредактирован");
         }
-
         private void ShowWarehouseInfo()
         {
             Console.Write("Введите ID склада: ");
@@ -916,7 +864,6 @@ class Pr5
                 }
             }
         }
-
         private void ListAllWarehouses()
         {
             var warehouses = _logisticsManager.GetWarehouses();
@@ -932,7 +879,6 @@ class Pr5
                 Console.WriteLine("---");
             }
         }
-
         private void ClearWarehouseProducts()
         {
             Console.Write("Введите ID склада: ");
@@ -970,12 +916,11 @@ class Pr5
             Console.WriteLine($"Товар создан с ID: {product.Id}");
 
             Console.Write("Добавить товар на склад? (д/н): ");
-            if (Console.ReadLine()!.ToLower() == "д")
+            if (Console.ReadLine().Equals("д", StringComparison.OrdinalIgnoreCase))
             {
                 AddProductToWarehouse(product);
             }
         }
-
         private void EditProduct()
         {
             Console.Write("Введите ID товара: ");
@@ -1026,7 +971,6 @@ class Pr5
             product.Edit(newSupplierId, newName, newVolume, newPrice, newExpiration);
             Console.WriteLine("Товар успешно отредактирован");
         }
-
         private void ShowProductInfo()
         {
             Console.Write("Введите ID товара: ");
@@ -1047,7 +991,6 @@ class Pr5
                 Console.WriteLine($"Находится на складе: {warehouse.Id} ({warehouse.Type}) - {warehouse.Address}");
             }
         }
-
         private void FindProductById()
         {
             Console.Write("Введите ID товара: ");
@@ -1062,7 +1005,6 @@ class Pr5
 
             Console.WriteLine(product.GetInformation());
         }
-
         private void ShowExpiredProducts()
         {
             var expiredProducts = new List<(Product product, Warehouse warehouse)>();
@@ -1075,7 +1017,7 @@ class Pr5
                 }
             }
 
-            if (!expiredProducts.Any())
+            if (expiredProducts.Count == 0)
             {
                 Console.WriteLine("Просроченных товаров не найдено");
                 return;
@@ -1124,7 +1066,7 @@ class Pr5
                 }
             }
 
-            if (!delivery.Any())
+            if (delivery.Count == 0)
             {
                 Console.WriteLine("Поставка пуста");
                 return;
@@ -1133,7 +1075,6 @@ class Pr5
             bool result = _logisticsManager.ProcessTheDelivery(delivery);
             Console.WriteLine($"Результат обработки поставки: {(result ? "УСПЕХ" : "НЕУДАЧА")}");
         }
-
         private void OptimizeWarehouse()
         {
             Console.Write("Введите ID склада для оптимизации: ");
@@ -1149,13 +1090,11 @@ class Pr5
             bool result = _logisticsManager.OptimizeWarehouse(warehouse);
             Console.WriteLine($"Результат оптимизации: {(result ? "УСПЕХ" : "ЕСТЬ ПРОБЛЕМЫ")}");
         }
-
         private void OptimizeAllWarehouses()
         {
             bool result = _logisticsManager.OptimizeAllWarehouses();
             Console.WriteLine($"Результат оптимизации всех складов: {(result ? "УСПЕХ" : "ЕСТЬ ПРОБЛЕМЫ")}");
         }
-
         private void MoveProductBetweenWarehouses()
         {
             Console.Write("Введите ID товара: ");
@@ -1196,7 +1135,6 @@ class Pr5
                 fromWarehouse.AddProduct(product);
             }
         }
-
         private void MoveExpiredToRecycling()
         {
             _logisticsManager.MoveExpiredProductsToRecycling();
@@ -1218,7 +1156,6 @@ class Pr5
             string analysis = _logisticsManager.AnalyzeWarehouse(warehouse);
             Console.WriteLine(analysis);
         }
-
         private void AnalyzeAllWarehouses()
         {
             foreach (var warehouse in _logisticsManager.GetWarehouses())
@@ -1228,7 +1165,6 @@ class Pr5
                 Console.WriteLine("---");
             }
         }
-
         private void ShowGeneralStatistics()
         {
             var warehouses = _logisticsManager.GetWarehouses();
@@ -1245,13 +1181,12 @@ class Pr5
             foreach (WarehouseType type in Enum.GetValues<WarehouseType>())
             {
                 var typeWarehouses = warehouses.Where(w => w.Type == type).ToList();
-                if (typeWarehouses.Any())
+                if (typeWarehouses.Count != 0)
                 {
                     Console.WriteLine($"  {type}: {typeWarehouses.Count} складов, {typeWarehouses.Sum(w => w.ProductsCount)} товаров");
                 }
             }
         }
-
         private void ShowFinancialReport()
         {
             var warehouses = _logisticsManager.GetWarehouses();
@@ -1268,7 +1203,6 @@ class Pr5
 
             Console.WriteLine($"\nОбщая стоимость товаров: {totalValue:C2}");
         }
-
         private void ShowProductsBySupplier()
         {
             Console.Write("Введите ID поставщика: ");
@@ -1284,7 +1218,7 @@ class Pr5
                 }
             }
 
-            if (!supplierProducts.Any())
+            if (supplierProducts.Count == 0)
             {
                 Console.WriteLine("Товары данного поставщика не найдены");
                 return;
@@ -1313,18 +1247,11 @@ class Pr5
             }
         }
 
-        private Product? FindProductInAnyWarehouse(int productId)
-        {
-            return _logisticsManager.GetWarehouses()
+        private Product? FindProductInAnyWarehouse(int productId) => _logisticsManager.GetWarehouses()
                 .SelectMany(w => w.Products)
                 .FirstOrDefault(p => p.Id == productId);
-        }
-
-        private Warehouse? FindWarehouseWithProduct(int productId)
-        {
-            return _logisticsManager.GetWarehouses()
+        private Warehouse? FindWarehouseWithProduct(int productId) => _logisticsManager.GetWarehouses()
                 .FirstOrDefault(w => w.ContainsProduct(productId));
-        }
 
         private void AddProductToWarehouse(Product product)
         {
